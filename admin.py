@@ -3,7 +3,7 @@ from discord.ext import commands
 import random
 import json
 import os
-TOKEN = 'NjkxMDQzMzg0MzgyNDU1ODA5.Xnau_g.G1AoZFvscqXx5v3CUqFIWWLWPe4'
+TOKEN = 'NjkxMDQzMzg0MzgyNDU1ODA5.XnbVOw.QG-44nyui7icx4V8QJ3FpzbTNdU'
 bot = commands.Bot(command_prefix = '!')
 os.chdir(r'D:\Bot\github')
 
