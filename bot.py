@@ -4,7 +4,7 @@ import random
 import json
 import os
 
-TOKEN = 'NjkwNzkyNjc3ODA1MTI5NzQ4.XnaipA.8LFkxfxVcDElV5aY71JE5EbMO6g'
+TOKEN = 'NjkwNzkyNjc3ODA1MTI5NzQ4.XnayiQ.IxSCVIaU3V0a5ZKjYxtc8cmrPh4'
 bot = commands.Bot(command_prefix = '.')
 
 
@@ -28,7 +28,6 @@ async def insult(ctx, *, target):
               "I never forget a face, but in your case, I'll make an exception.",
               "some cause happiness wherever they go, others whenever they go.",
               "if your brains were dynamite, there wouldn't be enough to blow your hat off.",
-              "some of my best leading men have been dogs and horses.",
               "only two things are infinite-- the universe and human stupidity, and I'm not so sure about the former.",
               "Greg fucked your dad.",
               "we were trying to get pregnant, but I forgot one of us had to have a penis.",
@@ -64,23 +63,23 @@ async def insult(ctx, *, target):
 @bot.command()
 async def compliment(ctx, *, target):
     compliments = ["I bet you make babies smile.",
-                    "You have the best laugh.",
-                    "You light up the room.",
-                    "You have a great sense of humor.",
-                    "If cartoon bluebirds were real, a couple of 'em would be sitting on your shoulders singing right now.",
-                    "You're like sunshine on a rainy day.",
-                    "You bring out the best in other people.",
+                    "you have the best laugh.",
+                    "you light up the room.",
+                    "you have a great sense of humor.",
+                    "if cartoon bluebirds were real, a couple of 'em would be sitting on your shoulders singing right now.",
+                    "you're like sunshine on a rainy day.",
+                    "you bring out the best in other people.",
                     "I bet you sweat glitter.",
-                    "Colors seem brighter when you're around.",
-                    "You're more fun than a ball pit filled with candy.",
-                    "Jokes are funnier when you tell them.",
-                    "You always know how to find that silver lining.",
-                    "You're a candle in the darkness.",
-                    "Being around you is like a happy little vacation.",
-                    "You're more fun than bubble wrap.",
-                    "You're like a breath of fresh air.",
-                    "You're someone's reason to smile.",
-                    "How do you keep being so funny and making everyone laugh?",]
+                    "colors seem brighter when you're around.",
+                    "you're more fun than a ball pit filled with candy.",
+                    "jokes are funnier when you tell them.",
+                    "you always know how to find that silver lining.",
+                    "you're a candle in the darkness.",
+                    "being around you is like a happy little vacation.",
+                    "you're more fun than bubble wrap.",
+                    "you're like a breath of fresh air.",
+                    "you're someone's reason to smile.",
+                    "how do you keep being so funny and making everyone laugh?",]
 
 
     await ctx.send(f'{target}, {random.choice(compliments)}')
