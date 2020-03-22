@@ -1,18 +1,17 @@
 import discord
 from discord.ext import commands
 import random
+import json
+import os
 
+TOKEN = 'NjkwNzkyNjc3ODA1MTI5NzQ4.XnaipA.8LFkxfxVcDElV5aY71JE5EbMO6g'
 bot = commands.Bot(command_prefix = '.')
-
 
 
 @bot.event
 async def on_ready():
     print('Bot is ready.')
 
-@bot.event
-async def on_member_join(member):
-    print(f'(member) has joined the server.')
 
 @bot.event
 async def on_member_remove(member):
@@ -20,7 +19,7 @@ async def on_member_remove(member):
 
 @bot.command()
 async def ping(ctx):
-    await ctx.send(f'Pong!{round(bot.latency * 1000)} ms')
+    await ctx.send(f'Pong! {round(bot.latency * 1000)}ms')
 
 @bot.command()
 async def insult(ctx, *, target):
@@ -51,13 +50,40 @@ async def insult(ctx, *, target):
               "you're dark and handsome. When it's dark, you're handsome.",
               "your beauty would be enhanced by a burka.",
               "is your name Victoria? Cause you’re playing like shit",
-              "make like a tree and fuck off",
+              "make like a tree and fuck off.",
               "it's okay to be ugly, but aren't you over doing it?",
               "the last time you were at the beach, Greenpeace tried to drag you back into the water.",
               "Yo' mama.",
               "whatever kind of look you were going for, you missed.",
-              "kudos on that camel toe."]
+              "kudos on that camel toe.",
+              "you're not yourself today. I noticed the improvement immediately!",
+              "I'm guessing you haven't been diagnosed yet?",
+              "kick me daddy!"]
     await ctx.send(f'{target}, {random.choice(insults)}')
+
+@bot.command()
+async def compliment(ctx, *, target):
+    compliments = ["I bet you make babies smile.",
+                    "You have the best laugh.",
+                    "You light up the room.",
+                    "You have a great sense of humor.",
+                    "If cartoon bluebirds were real, a couple of 'em would be sitting on your shoulders singing right now.",
+                    "You're like sunshine on a rainy day.",
+                    "You bring out the best in other people.",
+                    "I bet you sweat glitter.",
+                    "Colors seem brighter when you're around.",
+                    "You're more fun than a ball pit filled with candy.",
+                    "Jokes are funnier when you tell them.",
+                    "You always know how to find that silver lining.",
+                    "You're a candle in the darkness.",
+                    "Being around you is like a happy little vacation.",
+                    "You're more fun than bubble wrap.",
+                    "You're like a breath of fresh air.",
+                    "You're someone's reason to smile.",
+                    "How do you keep being so funny and making everyone laugh?",]
+
+
+    await ctx.send(f'{target}, {random.choice(compliments)}')
 
 @bot.command(aliases=['8ball'])
 async def _8ball(ctx, *, question):
@@ -84,4 +110,4 @@ async def _8ball(ctx, *, question):
     await ctx.send(f'Question: {question}\nAnswer: {random.choice(responses)}')
 
 
-bot.run('NjkwNzkyNjc3ODA1MTI5NzQ4.XnabeQ.K0Er7z9dAR7wX5tIfeUCfBzSFGk')
+bot.run(TOKEN)
