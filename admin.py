@@ -6,7 +6,7 @@ import os
 TOKEN = 'NjkxMDQzMzg0MzgyNDU1ODA5.Xne3eQ.AyGcwo8mELaa8YZZyP9TTivOn2g'
 bot = commands.Bot(command_prefix = '!')
 os.chdir(r'D:\Bot\github')
-
+#
 
 @bot.event
 async def on_ready():
