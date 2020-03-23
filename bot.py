@@ -4,7 +4,7 @@ import random
 import json
 import os
 
-TOKEN = 'NjkwNzkyNjc3ODA1MTI5NzQ4.Xngbcg.fOVywKp_e6mGYxwNlB3d1j97qgA'
+TOKEN = 'NjkwNzkyNjc3ODA1MTI5NzQ4.XnhJvw.YNstuC7rGbpp5r4O8XCKRDGqcuc'
 bot = commands.Bot(command_prefix = '.')
 
 

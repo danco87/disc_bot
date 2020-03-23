@@ -5,14 +5,9 @@ import os
 import pandas as pd
 import random
 
-TOKEN = 'NjkxMDQzMzg0MzgyNDU1ODA5.XnhLDw.i61Zf0UbmG18usb3ctS9Fjc88r8'
+TOKEN = 'NjkxMDQzMzg0MzgyNDU1ODA5.XnhQRA.brSN1OY-SyU2iwa22OKhYX-okUc'
 bot = commands.Bot(command_prefix = '!')
-os.chdir(r'D:\Bot\github')
-
-# df = pd.read_json('users.json')
-# df2 = df.T
-
-
+#os.chdir(r'D:\Bot\github')
 
 
 @bot.event
@@ -23,7 +18,7 @@ async def on_ready():
 
 @bot.command()
 @commands.has_role('Cone of Dunshire')
-
+#adds a cone to the target
 async def add_cone(ctx, target, num=1):
     with open('users.json', 'r') as f:
         users = json.load(f)            #read the json
@@ -37,7 +32,7 @@ async def add_cone(ctx, target, num=1):
 
 @bot.command()
 @commands.has_role('Cone of Dunshire')
-
+#removes a cone from the target
 async def remove_cone(ctx, target, num=1):
     with open('users.json', 'r') as f:
         users = json.load(f)            #read the json
@@ -50,6 +45,7 @@ async def remove_cone(ctx, target, num=1):
     await ctx.send('The awesome {0} has {1} cones to their name!'.format(f'{target}',users[f'{target}']['cones']))
 
 @bot.command()
+#shows how many cones the target has, it no target then self
 async def show_cones(ctx,target=None):
     target = target
     with open('users.json', 'r') as f:
@@ -62,19 +58,21 @@ async def show_cones(ctx,target=None):
          await ctx.send('This user has no cones yet.')
 
 @bot.command()
+#shows the leaderboard
 async def show_leader(ctx):
     with open('users.json', 'r') as f:
         users = json.load(f)
-    df = pd.read_json('users.json')
+    df = pd.read_json('users.json') #creates a dataframe out of the json
     df2 = df.T
-    await ctx.send(df2.sort_values(by=['cones'], ascending=False))
+    await ctx.send(df2.sort_values(by=['cones'], ascending=False)) #sends the dataframe sorted by cones
 
 @bot.command()
-#@commands.has_role('Cone of Dunshire')
+#gets the latency of the bot
 async def ping(ctx):
     await ctx.send(f'Pong! {round(bot.latency * 1000)}ms')
 
 @bot.command()
+#insults the target
 async def insult(ctx, *, target):
     insults = ["the trouble ain't there is too many fools, but that the lightning ain't distributed right.",
               "his mother should have thrown him away and kept the stork.",
@@ -114,6 +112,7 @@ async def insult(ctx, *, target):
     await ctx.send(f'{target}, {random.choice(insults)}')
 
 @bot.command()
+#compliments the target
 async def compliment(ctx, *, target):
     compliments = ["I bet you make babies smile.",
                     "you have the best laugh.",
@@ -138,6 +137,7 @@ async def compliment(ctx, *, target):
     await ctx.send(f'{target}, {random.choice(compliments)}')
 
 @bot.command(aliases=['8ball'])
+#gives an 8ball prediction of a question
 async def _8ball(ctx, *, question):
     responses = ["As I see it, yes.",
                 "Ask again later.",
