@@ -5,9 +5,9 @@ import os
 import pandas as pd
 import random
 
-TOKEN = 'NjkxMDQzMzg0MzgyNDU1ODA5.XnhQRA.brSN1OY-SyU2iwa22OKhYX-okUc'
+TOKEN = 'NjkxMDQzMzg0MzgyNDU1ODA5.Xnk5sA.I5kMw9EIjSRrFpx0T9dSDXDWxrY'
 bot = commands.Bot(command_prefix = '!')
-#os.chdir(r'D:\Bot\github')
+os.chdir(r'D:\Bot\github')
 
 
 @bot.event
@@ -43,6 +43,21 @@ async def remove_cone(ctx, target, num=1):
     with open('users.json', 'w') as f:  #write the changes to the json
         json.dump(users, f)
     await ctx.send('The awesome {0} has {1} cones to their name!'.format(f'{target}',users[f'{target}']['cones']))
+
+@bot.command()
+#give cones
+async def give_cone(ctx, target, num=1):
+    with open('users.json', 'r') as f:
+        users = json.load(f)            #read the json
+    if users['<@!{}>'.format(ctx.author.id)]['cones'] >= num:
+        users[f'{target}']['cones'] += num      #add the number of cones to target
+        await ctx.send('{0} now has {1} cones to their name!'.format(f'{target}',users[f'{target}']['cones']))
+        users['<@!{}>'.format(ctx.author.id)]['cones'] -= num  #subtract number of cones from author
+        await ctx.send('{0} now has {1} cones to their name!'.format(f'<@!{ctx.author.id}>',users['<@!{}>'.format(ctx.author.id)]['cones']))
+    else:
+        await ctx.send('{0} only has {1} cones to their name, that isn\'t enough for this transaction!'.format(f'<@!{ctx.author.id}>',users['<@!{}>'.format(ctx.author.id)]['cones']))
+    with open('users.json', 'w') as f:  #write the changes to the json
+        json.dump(users, f)
 
 @bot.command()
 #shows how many cones the target has, it no target then self
