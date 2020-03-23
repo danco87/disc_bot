@@ -4,7 +4,7 @@ import random
 import json
 import os
 
-TOKEN = 'NjkwNzkyNjc3ODA1MTI5NzQ4.XngLmA.zSfzGTSnICpm1gJ98xZpRzg_rPI'
+TOKEN = 'NjkwNzkyNjc3ODA1MTI5NzQ4.Xngbcg.fOVywKp_e6mGYxwNlB3d1j97qgA'
 bot = commands.Bot(command_prefix = '.')
 
 
@@ -18,7 +18,7 @@ async def on_member_remove(member):
     print(f'(member) has left the server.')
 
 @bot.command()
-@commands.has_role('Cone of Dunshire')
+#@commands.has_role('Cone of Dunshire')
 async def ping(ctx):
     await ctx.send(f'Pong! {round(bot.latency * 1000)}ms')
 
