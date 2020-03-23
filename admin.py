@@ -4,7 +4,7 @@ import json
 import os
 import pandas as pd
 
-TOKEN = 'NjkxMDQzMzg0MzgyNDU1ODA5.Xngzfw.L-4N3I-kto-KdYP9mK0A8201xWQ'
+TOKEN = 'NjkxMDQzMzg0MzgyNDU1ODA5.XnhJ5Q.092f2rhC0XS9TrI-UszrHNe1aSg'
 bot = commands.Bot(command_prefix = '!')
 os.chdir(r'D:\Bot\github')
 
@@ -59,7 +59,7 @@ async def show_cones(ctx,target=None):
         df = pd.read_json('users.json')
         df2 = df.T
         await ctx.send(df2.sort_values(by=['cones'], ascending=False))
-    elif f'{target}' in users:
+    if f'{target}' in users:
         await ctx.send('{0} has {1} cones.'.format(f'{target}', users[f'{target}']['cones']))
     else:
          await ctx.send('This user has no cones yet.')
