@@ -5,22 +5,22 @@ import os
 import pandas as pd
 import random
 
-TOKEN = 'NjkxMDQzMzg0MzgyNDU1ODA5.Xnz3Lg.8Kwsmeg3L1g6rlEUcLTSJjoKp64'
+TOKEN = 'NjkxMDQzMzg0MzgyNDU1ODA5.Xnz-8g.vD9z5KMh7KCaVDniHM-PjVKXD-Q'
 bot = commands.Bot(command_prefix = '.')
 os.chdir(r'D:\Bot\github')
 
 
 #this block is temporary testing gregsan
-df = pd.read_json('users.json') #creates a dataframe out of the json
-df = df.T
-df['names'] = df.index
-df = df.set_index('cones')
-df['nicknames'] = df['names']
-df['cones'] = df.index
-df.index = range(len(df.names))
-df = df[['cones', 'names', 'nicknames']]
-print(df)
-df.to_json(r'D:\Bot\github\users_test.json')
+# df = pd.read_json('users.json') #creates a dataframe out of the json
+# df = df.T
+# df['names'] = df.index
+# df = df.set_index('cones')
+# df['nicknames'] = df['names']
+# df['cones'] = df.index
+# df.index = range(len(df.names))
+# df = df[['cones', 'names', 'nicknames']]
+# print(df)
+# df.to_json(r'D:\Bot\github\users.json')
 
 
 @bot.event
@@ -42,6 +42,27 @@ async def add_cone(ctx, target, num=1):
     with open('users.json', 'w') as f:      #write the changes to the json
         json.dump(users, f)
     await ctx.send('The awesome {0} has {1} cones to their name!'.format(f'{target}',users[f'{target}']['cones']))
+
+@bot.command()
+@commands.has_role('Cone of Dunshire')
+async def give_nickname(ctx, target, nickname):
+    with open('users.json', 'r') as f:
+        users = json.load(f)            #read the json
+    users[f'{target}']['nickname'] = nickname
+
+    with open('users.json', 'w') as f:      #write the changes to the json
+        json.dump(users, f)
+
+@bot.command()
+#@commands.has_role('Cone of Dunshire')
+async def change_nickname(ctx, *, nickname):
+    with open('users.json', 'r') as f:
+        users = json.load(f)            #read the json
+    users['<@!{}>'.format(ctx.author.id)]['nickname'] = nickname
+
+    with open('users.json', 'w') as f:      #write the changes to the json
+        json.dump(users, f)
+    await ctx.send('{0} has changed their nickname to {1}!'.format('<@!{}>'.format(ctx.author.id),users['<@!{}>'.format(ctx.author.id)]['nickname']))
 
 @bot.command()
 @commands.has_role('Cone of Dunshire')
@@ -90,14 +111,12 @@ async def show_cones(ctx,target=None):
 async def show_leader(ctx):
     with open('users.json', 'r') as f:
         users = json.load(f)
-        #df = pd.read_json('users.json') #creates a dataframe out of the json
-        #df = df.T
-        #df['names'] = df.index
-        #df = df.set_index('cones')
-        df2 = df.drop(columns='names')
-        df2 = df2.set_index('cones')
-        #df2['nicknames'] = df2['nicknames'].map(lambda x: x.strip('<>'))
-    await ctx.send(df2.sort_values(by=['cones'], ascending=False)) #sends the dataframe sorted by cones
+        df = pd.read_json('users.json') #creates a dataframe out of the json
+        df = df.T
+        df['names'] = df.index
+        df = df.set_index('cones')
+        df = df.drop(columns='names')
+    await ctx.send(df.sort_values(by=['cones'], ascending=False)) #sends the dataframe sorted by cones
 
 @bot.command()
 #gets the latency of the bot
