@@ -5,9 +5,16 @@ import os
 import pandas as pd
 import random
 
-TOKEN = 'NjkxMDQzMzg0MzgyNDU1ODA5.Xnk5sA.I5kMw9EIjSRrFpx0T9dSDXDWxrY'
-bot = commands.Bot(command_prefix = '!')
+TOKEN = 'NjkxMDQzMzg0MzgyNDU1ODA5.Xnk7HA.iKwiGzhVtbEEu-R6oXlwUESRx2Q'
+bot = commands.Bot(command_prefix = '.')
 os.chdir(r'D:\Bot\github')
+
+df = pd.read_json('users.json') #creates a dataframe out of the json
+df = df.T
+df['names'] = df.index
+df = df.set_index('cones')
+df['nicknames'] = df['names']
+print(df)
 
 
 @bot.event
@@ -77,8 +84,11 @@ async def show_cones(ctx,target=None):
 async def show_leader(ctx):
     with open('users.json', 'r') as f:
         users = json.load(f)
-    df = pd.read_json('users.json') #creates a dataframe out of the json
-    df2 = df.T
+        #df = pd.read_json('users.json') #creates a dataframe out of the json
+        #df = df.T
+        #df['names'] = df.index
+        #df = df.set_index('cones')
+        df2 = df.drop(columns='names')
     await ctx.send(df2.sort_values(by=['cones'], ascending=False)) #sends the dataframe sorted by cones
 
 @bot.command()
