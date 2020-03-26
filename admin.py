@@ -5,16 +5,22 @@ import os
 import pandas as pd
 import random
 
-TOKEN = 'NjkxMDQzMzg0MzgyNDU1ODA5.Xnk7HA.iKwiGzhVtbEEu-R6oXlwUESRx2Q'
+TOKEN = 'NjkxMDQzMzg0MzgyNDU1ODA5.Xnz3Lg.8Kwsmeg3L1g6rlEUcLTSJjoKp64'
 bot = commands.Bot(command_prefix = '.')
 os.chdir(r'D:\Bot\github')
 
+
+#this block is temporary testing gregsan
 df = pd.read_json('users.json') #creates a dataframe out of the json
 df = df.T
 df['names'] = df.index
 df = df.set_index('cones')
 df['nicknames'] = df['names']
+df['cones'] = df.index
+df.index = range(len(df.names))
+df = df[['cones', 'names', 'nicknames']]
 print(df)
+df.to_json(r'D:\Bot\github\users_test.json')
 
 
 @bot.event
@@ -89,6 +95,8 @@ async def show_leader(ctx):
         #df['names'] = df.index
         #df = df.set_index('cones')
         df2 = df.drop(columns='names')
+        df2 = df2.set_index('cones')
+        #df2['nicknames'] = df2['nicknames'].map(lambda x: x.strip('<>'))
     await ctx.send(df2.sort_values(by=['cones'], ascending=False)) #sends the dataframe sorted by cones
 
 @bot.command()
