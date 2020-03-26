@@ -5,7 +5,7 @@ import os
 import pandas as pd
 import random
 
-TOKEN = 'NjkxMDQzMzg0MzgyNDU1ODA5.Xnz-8g.vD9z5KMh7KCaVDniHM-PjVKXD-Q'
+TOKEN = 'NjkxMDQzMzg0MzgyNDU1ODA5.Xn0qBw.Mg3TRh16XzD7od0S88CC8-AUlAA'
 bot = commands.Bot(command_prefix = '.')
 os.chdir(r'D:\Bot\github')
 
@@ -45,11 +45,11 @@ async def add_cone(ctx, target, num=1):
 
 @bot.command()
 @commands.has_role('Cone of Dunshire')
+#creates a custom nickname for our users.json
 async def give_nickname(ctx, target, nickname):
     with open('users.json', 'r') as f:
         users = json.load(f)            #read the json
     users[f'{target}']['nickname'] = nickname
-
     with open('users.json', 'w') as f:      #write the changes to the json
         json.dump(users, f)
 
@@ -59,7 +59,6 @@ async def change_nickname(ctx, *, nickname):
     with open('users.json', 'r') as f:
         users = json.load(f)            #read the json
     users['<@!{}>'.format(ctx.author.id)]['nickname'] = nickname
-
     with open('users.json', 'w') as f:      #write the changes to the json
         json.dump(users, f)
     await ctx.send('{0} has changed their nickname to {1}!'.format('<@!{}>'.format(ctx.author.id),users['<@!{}>'.format(ctx.author.id)]['nickname']))
@@ -184,8 +183,6 @@ async def compliment(ctx, *, target):
                     "you're like a breath of fresh air.",
                     "you're someone's reason to smile.",
                     "how do you keep being so funny and making everyone laugh?",]
-
-
     await ctx.send(f'{target}, {random.choice(compliments)}')
 
 @bot.command(aliases=['8ball'])
@@ -212,5 +209,25 @@ async def _8ball(ctx, *, question):
                 "Yes – definitely.",
                 "You may rely on it."]
     await ctx.send(f'Question: {question}\nAnswer: {random.choice(responses)}')
+
+@bot.command()
+async def card(ctx):
+    with open('users.json', 'r') as f:
+        users = json.load(f)            #read the json
+    cards = ["Ace of Spades", "Ace of Diamonds", "Ace of Clubs", "Ace of Hearts",
+            "King of Spades", "King of Diamonds", "King of Clubs", "King of Hearts",
+            "Queen of Spades", "Queen of Diamonds", "Queen of Clubs", "Queen of Hearts",
+            "Jack of Spades", "Jack of Diamonds", "Jack of Clubs", "Jack of Hearts",
+            "Ten of Spades", "Ten of Diamonds", "Ten of Clubs", "Ten of Hearts",
+            "Nine of Spades", "Nine of Diamonds", "Nine of Clubs", "Nine of Hearts",
+            "Eight of Spades", "Eight of Diamonds", "Eight of Clubs", "Eight of Hearts",
+            "Seven of Spades", "Seven of Diamonds", "Seven of Clubs", "Seven of Hearts",
+            "Six of Spades", "Six of Diamonds", "Six of Clubs", "Six of Hearts",
+            "Five of Spades", "Five of Diamonds", "Five of Clubs", "Five of Hearts",
+            "Four of Spades", "Four of Diamonds", "Four of Clubs", "Four of Hearts",
+            "Three of Spades", "Three of Diamonds", "Three of Clubs", "Three of Hearts",
+            "Two of Spades", "Two of Diamonds", "Two of Clubs", "Two of Hearts",
+            "Six of Spades", "Six of Diamonds", "Six of Clubs", "Six of Hearts"]
+    await ctx.send('{} drew a {}.'.format(users['<@!{}>'.format(ctx.author.id)]['nickname'],random.choice(cards)))
 
 bot.run(TOKEN)
