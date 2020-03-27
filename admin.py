@@ -5,7 +5,7 @@ import os
 import pandas as pd
 import random
 
-TOKEN = 'NjkxMDQzMzg0MzgyNDU1ODA5.Xn0qBw.Mg3TRh16XzD7od0S88CC8-AUlAA'
+TOKEN = ''
 bot = commands.Bot(command_prefix = '.')
 os.chdir(r'D:\Bot\github')
 
@@ -20,7 +20,7 @@ os.chdir(r'D:\Bot\github')
 # df.index = range(len(df.names))
 # df = df[['cones', 'names', 'nicknames']]
 # print(df)
-# df.to_json(r'D:\Bot\github\users.json')
+# df.to_json(r'D:\Bot\github\users_test.json')
 
 
 @bot.event
@@ -33,6 +33,35 @@ async def on_ready():
 @commands.has_role('Cone of Dunshire')
 #adds a cone to the target
 async def add_cone(ctx, target, num=1):
+    words = ['The magnanimous',
+             'The awesome',
+             'The incredible',
+             'The fortuitous',
+             'The flabbergasted',
+             'The GOAT',
+             'The rebelious',
+             'The emperor',
+             'The genius',
+             'The conqueror',
+             'The one who is better than all things,',
+             'The one who excedes expectations,',
+             'The shiny',
+             'The enthralling',
+             'The bewitching',
+             'The stunning',
+             'The elegant',
+             'The popular',
+             'The intelligent',
+             'The capable',
+             'The confident',
+             'The extremely tall',
+             'The super well endowed',
+             'The highly sought after',
+             'The charming',
+             'The one who lights up a room,',
+             'The hyper-1337',
+             'The one made of carbon and some other stuff too',
+             'The jedi']
     with open('users.json', 'r') as f:
         users = json.load(f)            #read the json
     if not f'{target}' in users:        #create a entry for the user if one doesn't already exist
@@ -41,7 +70,7 @@ async def add_cone(ctx, target, num=1):
     users[f'{target}']['cones'] += num      #modify the number of cones
     with open('users.json', 'w') as f:      #write the changes to the json
         json.dump(users, f)
-    await ctx.send('The awesome {0} has {1} cones to their name!'.format(f'{target}',users[f'{target}']['cones']))
+    await ctx.send('{0} {1} has {2} cones to their name!'.format(random.choice(words) ,f'{target}',users[f'{target}']['cones']))
 
 @bot.command()
 @commands.has_role('Cone of Dunshire')
@@ -67,6 +96,35 @@ async def change_nickname(ctx, *, nickname):
 @commands.has_role('Cone of Dunshire')
 #removes a cone from the target
 async def remove_cone(ctx, target, num=1):
+    words = ['The magnanimous',
+             'The awesome',
+             'The incredible',
+             'The fortuitous',
+             'The flabbergasted',
+             'The GOAT',
+             'The rebelious',
+             'The emperor',
+             'The genius',
+             'The conqueror',
+             'The one who is better than all things,',
+             'The one who excedes expectations,',
+             'The shiny',
+             'The enthralling',
+             'The bewitching',
+             'The stunning',
+             'The elegant',
+             'The popular',
+             'The intelligent',
+             'The capable',
+             'The confident',
+             'The extremely tall',
+             'The super well endowed',
+             'The highly sought after',
+             'The charming',
+             'The one who lights up a room,',
+             'The hyper-1337',
+             'The one made of carbon and some other stuff too',
+             'The jedi']
     with open('users.json', 'r') as f:
         users = json.load(f)            #read the json
     if not f'{target}' in users:        #create a entry for the user if one doesn't already exist
@@ -75,7 +133,7 @@ async def remove_cone(ctx, target, num=1):
     users[f'{target}']['cones'] -= num  #modify the number of cones
     with open('users.json', 'w') as f:  #write the changes to the json
         json.dump(users, f)
-    await ctx.send('The awesome {0} has {1} cones to their name!'.format(f'{target}',users[f'{target}']['cones']))
+    await ctx.send('{0} {1} has {2} cones to their name!'.format(random.choice(words) ,f'{target}',users[f'{target}']['cones']))
 
 @bot.command()
 #give cones
@@ -116,6 +174,31 @@ async def show_leader(ctx):
         df = df.set_index('cones')
         df = df.drop(columns='names')
     await ctx.send(df.sort_values(by=['cones'], ascending=False)) #sends the dataframe sorted by cones
+
+@bot.command()
+#shows a list of available bot commands
+async def commands(ctx):
+    df_t = pd.DataFrame()
+    df_t['commands'] = ['.8ball',
+                       '.card',
+                       '.insult',
+                       '.compliment',
+                       '.ping',
+                       '.show_cones',
+                       '.show_leader',
+                       '.change_nickname',
+                       '.give_cone']
+    df_t['function'] = ['answers a yes or no question',
+                       'pulls a random card',
+                       'insults your target',
+                       'compliments your target',
+                       'will pong the latency',
+                       'shows your or your targets cone count',
+                       'shows the leaderboard',
+                       'changes your nickname',
+                       'gives a cone to your target']
+    df_t = df_t.set_index('commands')
+    await ctx.send(df_t)
 
 @bot.command()
 #gets the latency of the bot
@@ -211,6 +294,7 @@ async def _8ball(ctx, *, question):
     await ctx.send(f'Question: {question}\nAnswer: {random.choice(responses)}')
 
 @bot.command()
+#generates a card from a standard deck
 async def card(ctx):
     with open('users.json', 'r') as f:
         users = json.load(f)            #read the json
