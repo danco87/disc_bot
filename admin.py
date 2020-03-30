@@ -75,12 +75,13 @@ async def add_cone(ctx, target, num=1):
 @bot.command()
 @commands.has_role('Cone of Dunshire')
 #creates a custom nickname for our users.json
-async def give_nickname(ctx, target, nickname):
+async def give_nickname(ctx, target, *, nickname):
     with open('users.json', 'r') as f:
         users = json.load(f)            #read the json
     users[f'{target}']['nickname'] = nickname
     with open('users.json', 'w') as f:      #write the changes to the json
         json.dump(users, f)
+    await ctx.send('{0}\'s nickname has been changed to {1}!'.format(f'{target}',users[f'{target}']['nickname']))
 
 @bot.command()
 #@commands.has_role('Cone of Dunshire')
@@ -96,35 +97,36 @@ async def change_nickname(ctx, *, nickname):
 @commands.has_role('Cone of Dunshire')
 #removes a cone from the target
 async def remove_cone(ctx, target, num=1):
-    words = ['The magnanimous',
-             'The awesome',
-             'The incredible',
-             'The fortuitous',
-             'The flabbergasted',
-             'The GOAT',
-             'The rebelious',
-             'The emperor',
-             'The genius',
-             'The conqueror',
-             'The one who is better than all things,',
-             'The one who excedes expectations,',
-             'The shiny',
-             'The enthralling',
-             'The bewitching',
-             'The stunning',
-             'The elegant',
-             'The popular',
-             'The intelligent',
-             'The capable',
-             'The confident',
-             'The extremely tall',
-             'The super well endowed',
-             'The highly sought after',
-             'The charming',
-             'The one who lights up a room,',
-             'The hyper-1337',
-             'The one made of carbon and some other stuff too',
-             'The jedi']
+    words = ['The soggy',
+             'The sad',
+             'The destroyed',
+             'The stinky',
+             'The Darwin Awarded',
+             'The disgusting',
+             'The confused',
+             'The super unrelatable',
+             'The befuddled',
+             'The ever-smelly',
+             'The one who is crunchy,',
+             'The one who is sweaty,',
+             'The nice',
+             'The repulsive',
+             'The n00b',
+             'The casual',
+             'The one that everyone is secretly laughing at,',
+             'The butthole',
+             'The cranky',
+             'The poo smeller',
+             'The diddly dipper',
+             'The extremely loud',
+             'The scrawny',
+             'The ever-ignored',
+             'The stinky fart',
+             'The pissy,',
+             'The shit lord',
+             'The one who exxagerates too much, ',
+             'The sith',
+             'The Thanos sympathizer']
     with open('users.json', 'r') as f:
         users = json.load(f)            #read the json
     if not f'{target}' in users:        #create a entry for the user if one doesn't already exist
@@ -133,7 +135,7 @@ async def remove_cone(ctx, target, num=1):
     users[f'{target}']['cones'] -= num  #modify the number of cones
     with open('users.json', 'w') as f:  #write the changes to the json
         json.dump(users, f)
-    await ctx.send('{0} {1} has {2} cones to their name!'.format(random.choice(words) ,f'{target}',users[f'{target}']['cones']))
+    await ctx.send('{0} {1} only has {2} cones left to their name! ROFLMFAO'.format(random.choice(words) ,f'{target}',users[f'{target}']['cones']))
 
 @bot.command()
 #give cones
@@ -171,6 +173,7 @@ async def show_leader(ctx):
         df = pd.read_json('users.json') #creates a dataframe out of the json
         df = df.T
         df['names'] = df.index
+        df.cones = df.cones.astype(int)
         df = df.set_index('cones')
         df = df.drop(columns='names')
     await ctx.send(df.sort_values(by=['cones'], ascending=False)) #sends the dataframe sorted by cones
@@ -216,7 +219,7 @@ async def insult(ctx, *, target):
               "only two things are infinite-- the universe and human stupidity, and I'm not so sure about the former.",
               "Greg fucked your dad.",
               "we were trying to get pregnant, but I forgot one of us had to have a penis.",
-              "my opponent is a glob of snot.",
+              "is a glob of snot.",
               "you are proof that God has a sense of humor.",
               "if I throw a stick, will you leave?",
               "in the land of the witless, you would be king.",
@@ -295,7 +298,7 @@ async def _8ball(ctx, *, question):
 
 @bot.command()
 #generates a card from a standard deck
-async def card(ctx):
+async def card(ctx, num=1):
     with open('users.json', 'r') as f:
         users = json.load(f)            #read the json
     cards = ["Ace of Spades", "Ace of Diamonds", "Ace of Clubs", "Ace of Hearts",
@@ -312,6 +315,7 @@ async def card(ctx):
             "Three of Spades", "Three of Diamonds", "Three of Clubs", "Three of Hearts",
             "Two of Spades", "Two of Diamonds", "Two of Clubs", "Two of Hearts",
             "Six of Spades", "Six of Diamonds", "Six of Clubs", "Six of Hearts"]
-    await ctx.send('{} drew a {}.'.format(users['<@!{}>'.format(ctx.author.id)]['nickname'],random.choice(cards)))
+    c = random.choices(cards, k=num)
+    await ctx.send('{} drew a {}.'.format(users['<@!{}>'.format(ctx.author.id)]['nickname'], str(c).strip('[]')))
 
 bot.run(TOKEN)
