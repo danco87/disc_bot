@@ -29,7 +29,7 @@ async def on_ready():
 
 
 
-@bot.command()
+@bot.command(aliases=['gib'])
 @commands.has_role('Cone of Dunshire')
 #adds a cone to the target
 async def add_cone(ctx, target, num=1):
@@ -153,7 +153,7 @@ async def give_cone(ctx, target, num=1):
         json.dump(users, f)
 
 @bot.command()
-#shows how many cones the target has, it no target then self
+#shows how many cones the target has, if no target then self
 async def show_cones(ctx,target=None):
     target = target
     with open('users.json', 'r') as f:
@@ -190,7 +190,9 @@ async def commands(ctx):
                        '.show_cones',
                        '.show_leader',
                        '.change_nickname',
-                       '.give_cone']
+                       '.give_cone',
+                       '.comfort',
+                       '.unsettle']
     df_t['function'] = ['answers a yes or no question',
                        'pulls a random card',
                        'insults your target',
@@ -199,7 +201,9 @@ async def commands(ctx):
                        'shows your or your targets cone count',
                        'shows the leaderboard',
                        'changes your nickname',
-                       'gives a cone to your target']
+                       'gives a cone to your target',
+                       'comforts the target',
+                       'da fuq you think it does']
     df_t = df_t.set_index('commands')
     await ctx.send(df_t)
 
@@ -247,6 +251,61 @@ async def insult(ctx, *, target):
               "I'm guessing you haven't been diagnosed yet?",
               "kick me daddy!"]
     await ctx.send(f'{target}, {random.choice(insults)}')
+
+@bot.command()
+#comforts the target
+async def comfort(ctx, *, target):
+    comforts = ["Don\'t worry {}, everything will be alright.",
+                "{}, it's ok bby.",
+                "The sun is shining and so are you, {}!",
+                "You are a strong indepent woman, {}.",
+                "Wrap your arms around yourself and pretend I'm giving you a big hug, {}.",
+                "In tough times there will always be people who help. Look for the helpers, {}.",
+                "{}! You got this!",
+                "Ah I see you're wearing your ass-kicking outfit, {}, a good choice.",
+                "The night is always darkest before the dawn, {}.",
+                "Sometimes we just have to remember, 'All we have to decide is what to do with the time that is given to us.', {}.",
+                "Have you given yourself a high-five today {}? Because you deserve one.",
+                "Sometimes you've just gotta eat a snack, take a nap, and know that things will be better tomorrow, {}.",
+                "Hey {}, drink some wine.",
+                "{}, the world may be dark and scary, but having you as a friend helps.",
+                "{}, there there.",
+                "Shit sucks, but everyone knows that {} is kicking ass!",
+                "{}, take a moment to focus on the small happy things in the world: there are constalations of stars that we gazed at and gave them names, there are old books full of stories and nice smells, there is hot chocolate with marshmellows, someone is falling in love for the first time right now, there will be mornings where you wake up feeling safe and snuggled in your warm bed and realize that you've become the person you wanted to be your whole life, after it rains the scent of the pavemnet and the sense of the world is that it's all new and anything can happen, there will be moments when you walk into a room and everyone will light up in cheer because your presence brings them so much joy, bread and cheese both exist, {} isn't even close to finished kicking ass, sometimes your favorite song will come on when you're driving in your car just when you need it most and maybe thats coincidence and maybe that's kismet but either way it's a nice moment. ",
+                "Is {} Deathwing? Because they're unstoppable!"]
+    await ctx.send(random.choice(comforts).format(f'{target}'))
+
+@bot.command()
+#unsettles the target
+async def unsettle(ctx, *, target):
+    unsettles = ["{}, everyone that you love will die eventually.",
+                "{}, you better watch out, you better watch out, you beTTER WATCH OUT-",
+                "{}, realistically, everything will not be okay.",
+                "{}, you will outlive your pets.",
+                "Hey {}, did you know Jeff Bezos has over 100 billion dollars? He could fix world problems and chooses not to.",
+                "No one would notice if you stopped posting on social media, {}.",
+                "But are you SURE you locked the door, {}?",
+                "It doesn’t matter how safely you drive, {}. Another driver can always hit you.",
+                "Yes, {}. Everyone IS talking about you.",
+                "Even nice hotels get bedbugs, {}. And they WILL follow you home.",
+                "{}, you might be overwatering your plants.",
+                "Hey {}, that bad dream you had was actually a premonition.",
+                "Oh, {}. It’s not a matter of ‘if,’ but ‘when.’",
+                "Statistically, {}, you are insignificant.",
+                "When was the last time you looked at your reflection? Really looked at it? How well do you know your own face, {}?",
+                "{}, every face in your dreams and your nightmares comes from faces you’ve seen in real life. Have you thought of how your face appears in other people’s dreams?",
+                "At some point in the relatively near future, {} and everyone they have ever known will no longer exist.",
+                "It is possible that giant squid exist and we just haven’t found them yet. When was the last time you went swimming in the ocean, {}?",
+                "Some estimates are that the human body, by mass, is 50% bacteria and 50% of your own cells. How sure are you that your thoughts are your own, {}?",
+                "{}, you only ever see your reflection. You never get to know what you truly look like.",
+                "{}, do you know how many bones are in your body? In your hand? Have you felt them recently? Are you sure those are all bones?",
+                "If there is something that lives under {}'s bed, it only comes out when they’re sleeping. It’s not necessarily malicious, but that doesn’t mean it’s friendly either.",
+                "{} cannot position their tongue in their mouth in such a way that they can’t feel it.",
+                "{}, because you are always wearing clothes, your laundry will never be completely done.",
+                "You smell different when you're awake, {}.",
+                "I know what {} did. We all know what {} did.",
+                "Don't look behind you {}."]
+    await ctx.send(random.choice(unsettles).format(f'{target}'))
 
 @bot.command()
 #compliments the target
