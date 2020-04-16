@@ -81,7 +81,7 @@ async def change_nickname(ctx, *, nickname):
         json.dump(users, f)
     await ctx.send('{0} has changed their nickname to {1}!'.format('<@!{}>'.format(ctx.author.id),users['<@!{}>'.format(ctx.author.id)]['nickname']))
 
-@bot.command()
+@bot.command(aliases=['remove_cones'])
 @commands.has_role('Cone of Dunshire')
 #removes a cone from the target
 async def remove_cone(ctx, target, num=1):
@@ -125,7 +125,7 @@ async def remove_cone(ctx, target, num=1):
         json.dump(users, f)
     await ctx.send('{0} {1} only has {2} cones left to their name! ROFLMFAO'.format(random.choice(words) ,f'{target}',users[f'{target}']['cones']))
 
-@bot.command()
+@bot.command(aliases=['give_cones'])
 #give cones
 async def give_cone(ctx, target, num=1):
     with open('users.json', 'r') as f:
@@ -142,7 +142,7 @@ async def give_cone(ctx, target, num=1):
 
 @bot.command()
 #sets team name
-async def team(ctx, *, team=None):
+async def team(ctx, *, team):
     with open('users.json', 'r') as f:
         users = json.load(f)            #read the json
     users['<@!{}>'.format(ctx.author.id)]['team'] = team
@@ -150,7 +150,7 @@ async def team(ctx, *, team=None):
     with open('users.json', 'w') as f:  #write the changes to the json
         json.dump(users, f)
 
-@bot.command()
+@bot.command(aliases=['show_team'])
 #shows teams
 async def show_teams(ctx):
     with open('users.json', 'r') as f:
@@ -162,7 +162,7 @@ async def show_teams(ctx):
         df = df.drop(columns=['names', 'cones'])
     await ctx.send(df.drop(0).sort_values(by=['team'])) #sends the dataframe sorted by cones
 
-@bot.command()
+@bot.command(aliases=['reset'])
 @commands.has_role('Cone of Dunshire')
 #sets all teams to 0
 async def reset_teams(ctx):
@@ -187,7 +187,7 @@ async def team_cone(ctx, *, temp):
         json.dump(users, f)
     await ctx.send('Team {0} has won a cone. Every member of the team gains one!'.format(temp))
 
-@bot.command()
+@bot.command(aliases=['show_cone'])
 #shows how many cones the target has, if no target then self
 async def show_cones(ctx,target=None):
     target = target
@@ -200,7 +200,7 @@ async def show_cones(ctx,target=None):
     else:
          await ctx.send('This user has no cones yet.')
 
-@bot.command()
+@bot.command(aliases=['show_leaders'])
 #shows the leaderboard
 async def show_leader(ctx):
     with open('users.json', 'r') as f:
@@ -213,7 +213,21 @@ async def show_leader(ctx):
         df = df.drop(columns=['names', 'team'])
     await ctx.send(df.sort_values(by=['cones'], ascending=False)) #sends the dataframe sorted by cones
 
-@bot.command()
+@bot.command(aliases=['stats'])
+#shows the leaderboard
+async def show_stats(ctx):
+    with open('users.json', 'r') as f:
+        users = json.load(f)
+        df = pd.read_json('users.json') #creates a dataframe out of the json
+        df = df.T
+        df['names'] = df.index
+        df.cones = df.cones.astype(int)
+        df = df.drop(columns=['names', 'team'])
+        target = '<@!{}>'.format(ctx.author.id)
+    await ctx.send('You have {0} cones. \nThe average number of cones is {1}. \nThe median number of cones is {2}. \nThe 75th percentile of cones is {3}. \nThe 95th percentile of cones is {4}, \nYou have {5} fewer cones than the current leader.'.format(users[f'{target}']['cones'], round(df.cones.mean()), round(df.cones.median()), round(df.cones.quantile(.75)), round(df.cones.quantile(.95)), df.cones.max() - users[f'{target}']['cones']))
+
+
+@bot.command(aliases=['command'])
 #shows a list of available bot commands
 async def commands(ctx):
     df_t = pd.DataFrame()
@@ -227,7 +241,10 @@ async def commands(ctx):
                        '.change_nickname',
                        '.give_cone',
                        '.comfort',
-                       '.unsettle']
+                       '.unsettle',
+                       '.team',
+                       '.show_teams',
+                       '.show_stats']
     df_t['function'] = ['answers a yes or no question',
                        'pulls a random card',
                        'insults your target',
@@ -238,7 +255,10 @@ async def commands(ctx):
                        'changes your nickname',
                        'gives a cone to your target',
                        'comforts the target',
-                       'da fuq you think it does']
+                       'da fuq you think it does',
+                       'sets your team name',
+                       'shows all currently set teams',
+                       'shows general stats for cones']
     df_t = df_t.set_index('commands')
     await ctx.send(df_t)
 
@@ -390,7 +410,7 @@ async def _8ball(ctx, *, question):
                 "You may rely on it."]
     await ctx.send(f'Question: {question}\nAnswer: {random.choice(responses)}')
 
-@bot.command()
+@bot.command(aliases=['cards'])
 #generates a card from a standard deck
 async def card(ctx, num=1):
     with open('users.json', 'r') as f:
