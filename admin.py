@@ -9,18 +9,7 @@ TOKEN = ''
 bot = commands.Bot(command_prefix = '.')
 os.chdir(r'D:\Bot\github')
 
-
-#this block is temporary testing gregsan
-# df = pd.read_json('users.json') #creates a dataframe out of the json
-# df = df.T
-# df['names'] = df.index
-# df = df.set_index('cones')
-# df['nicknames'] = df['names']
-# df['cones'] = df.index
-# df.index = range(len(df.names))
-# df = df[['cones', 'names', 'nicknames']]
-# print(df)
-# df.to_json(r'D:\Bot\github\users_test.json')
+#This is an all-purpose bot for The Cone Zone
 
 
 @bot.event
@@ -84,7 +73,6 @@ async def give_nickname(ctx, target, *, nickname):
     await ctx.send('{0}\'s nickname has been changed to {1}!'.format(f'{target}',users[f'{target}']['nickname']))
 
 @bot.command()
-#@commands.has_role('Cone of Dunshire')
 async def change_nickname(ctx, *, nickname):
     with open('users.json', 'r') as f:
         users = json.load(f)            #read the json
@@ -153,6 +141,53 @@ async def give_cone(ctx, target, num=1):
         json.dump(users, f)
 
 @bot.command()
+#sets team name
+async def team(ctx, *, team=None):
+    with open('users.json', 'r') as f:
+        users = json.load(f)            #read the json
+    users['<@!{}>'.format(ctx.author.id)]['team'] = team
+    await ctx.send('{0} is on team {1}!'.format(f'<@!{ctx.author.id}>',users['<@!{}>'.format(ctx.author.id)]['team']))
+    with open('users.json', 'w') as f:  #write the changes to the json
+        json.dump(users, f)
+
+@bot.command()
+#shows teams
+async def show_teams(ctx):
+    with open('users.json', 'r') as f:
+        users = json.load(f)
+        df = pd.read_json('users.json') #creates a dataframe out of the json
+        df = df.T
+        df['names'] = df.index
+        df = df.set_index('team')
+        df = df.drop(columns=['names', 'cones'])
+    await ctx.send(df.drop(0).sort_values(by=['team'])) #sends the dataframe sorted by cones
+
+@bot.command()
+@commands.has_role('Cone of Dunshire')
+#sets all teams to 0
+async def reset_teams(ctx):
+    with open('users.json', 'r') as f:
+        users = json.load(f)            #read the json
+    for user in users:
+        users[user]['team'] = 0
+    with open('users.json', 'w') as f:  #write the changes to the json
+        json.dump(users, f)
+
+
+@bot.command(aliases=['gib_team'])
+@commands.has_role('Cone of Dunshire')
+#adds a cone to the target team
+async def team_cone(ctx, *, temp):
+    with open('users.json', 'r') as f:
+        users = json.load(f)            #read the json
+    for user in users:
+        if users[user]['team'] == temp:
+            users[user]['cones'] += 1
+    with open('users.json', 'w') as f:  #write the changes to the json
+        json.dump(users, f)
+    await ctx.send('Team {0} has won a cone. Every member of the team gains one!'.format(temp))
+
+@bot.command()
 #shows how many cones the target has, if no target then self
 async def show_cones(ctx,target=None):
     target = target
@@ -175,7 +210,7 @@ async def show_leader(ctx):
         df['names'] = df.index
         df.cones = df.cones.astype(int)
         df = df.set_index('cones')
-        df = df.drop(columns='names')
+        df = df.drop(columns=['names', 'team'])
     await ctx.send(df.sort_values(by=['cones'], ascending=False)) #sends the dataframe sorted by cones
 
 @bot.command()
