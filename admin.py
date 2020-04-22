@@ -8,16 +8,48 @@ import random
 import scipy
 from scipy import stats
 
+pd.set_option('display.max_columns', None)
+
 TOKEN = ''
 bot = commands.Bot(command_prefix = '.')
 os.chdir(r'D:\Bot\github')
 
+#betting multipliers
+low = 1.15
+medium = 1.4
+high = 1.75
+higher = 2
+highest = 4
+
+#minimum number of cones someone can haven
+minimum_cones = 2
+
+#percentile brackets
+low_bracket = 25
+medium_bracket = 50
+high_bracket = 75
+higher_bracket = 95
+
 #This is an all-purpose bot for The Cone Zone
-
-
 @bot.event
 async def on_ready():
     print('Bot is ready.')
+
+@bot.event
+#creates an account in our system when a user joins the server
+async def on_member_join(member):
+    with open('users.json', 'r') as f:
+        users = json.load(f)            #read the json
+    target = member.author.id
+    if not f'{target}' in users:        #create a entry for the user if one doesn't already exist
+        users[f'{target}'] = {}
+        users[f'{target}']['cones'] = 2
+        users[f'{target}']['multiplier'] = higher
+        users[f'{target}']['bet'] = 0
+        users[f'{target}']['team'] = 0
+        users[f'{target}']['nickname'] = f'{target}'
+    with open('users.json', 'w') as f:  #write the changes to the json
+        json.dump(users, f)
 
 @bot.event
 @has_permissions(manage_messages=True)
@@ -40,16 +72,49 @@ async def on_message(message):
              await message.channel.send('{} just tried to use an emoji they aren\'t allowed to use!'.format(message.author))
     await bot.process_commands(message)
 
-@bot.command(aliases=['reset_bets'])
-#sets all bets to 0
-async def bet_reset(ctx):
+@bot.command(aliases=['cancel_bets'])
+@commands.has_role('Cone of Dunshire')
+#sets all bets to 0, refunding the bet
+async def bet_cancel(ctx):
+    with open('users.json', 'r') as f:
+        users = json.load(f)            #read the json
+    df = pd.read_json('users.json') #creates a dataframe out of the json
+    df = df.T
+    df['names'] = df.index
+    df.cones = df.cones.astype(int)
+    df = df.drop(columns=['names', 'team'])
+    for user in users:
+        cones = users[user]['cones']
+        cones += int(users[user]['bet'])
+        users[user]['bet'] = 0
+        percentile = scipy.stats.percentileofscore(df.cones, cones)
+        if percentile < low_bracket:
+            users[user]['multiplier'] = highest
+        elif percentile < medium_bracket:
+            users[user]['multiplier'] = higher
+        elif percentile < high_bracket:
+            users[user]['multiplier'] = high
+        elif percentile < higher_bracket:
+            users[user]['multiplier'] = medium
+        else:
+            users[user]['multiplier'] = low
+    with open('users.json', 'w') as f:  #write the changes to the json
+        json.dump(users, f)
+    await ctx.send('The Cone House has returned all the bets.')
+
+@bot.command(aliases=['collect_bets'])
+@commands.has_role('Cone of Dunshire')
+#sets all bets to 0, doesnt refund
+async def bet_collect(ctx):
     with open('users.json', 'r') as f:
         users = json.load(f)            #read the json
     for user in users:
-        users[user]['cones'] += int(users[user]['bet'])
+        if users[user]['cones'] < minimum_cones:
+            users[user]['cones'] = minimum_cones
         users[user]['bet'] = 0
     with open('users.json', 'w') as f:  #write the changes to the json
         json.dump(users, f)
+    await ctx.send('The Cone House has collected all the bets. Thanks for playing please come again.')
 
 @bot.command()
 @commands.has_role('Cone of Dunshire')
@@ -65,12 +130,16 @@ async def set_odds(ctx):
     for user in users:  #adjusts the multiplier for betting based on percentile position
         cones = users[user]['cones']
         percentile = scipy.stats.percentileofscore(df.cones, cones)
-        if percentile < 20:
-            users[user]['multiplier'] = 2
-        elif percentile < 75:
-            users[user]['multiplier'] = 1.5
+        if percentile < low_bracket:
+            users[user]['multiplier'] = highest
+        elif percentile < medium_bracket:
+            users[user]['multiplier'] = higher
+        elif percentile < high_bracket:
+            users[user]['multiplier'] = high
+        elif percentile < higher_bracket:
+            users[user]['multiplier'] = medium
         else:
-            users[user]['multiplier'] = 1.25
+            users[user]['multiplier'] = low
     with open('users.json', 'w') as f:  #write the changes to the json
         json.dump(users, f)
 
@@ -79,7 +148,12 @@ async def set_odds(ctx):
 async def bet(ctx, num):
     with open('users.json', 'r') as f:
         users = json.load(f)            #read the json
-    num = int(num)
+    if num == 'random': #allows players to place a random bet
+        num = random.randint(1,int(users['<@!{}>'.format(ctx.author.id)]['cones']))
+        await ctx.send('The brave {} is randomly betting!'.format(f'<@!{ctx.author.id}>'))
+    if num == 'max':
+        num = users['<@!{}>'.format(ctx.author.id)]['cones']
+    num = int(num) #changes everything passed in to an int to avoid breaking
     df = pd.read_json('users.json') #creates a dataframe out of the json
     df = df.T
     df['names'] = df.index
@@ -87,21 +161,32 @@ async def bet(ctx, num):
     df = df.drop(columns=['names', 'team'])
     target = '<@!{}>'.format(ctx.author.id)
     cones = users[f'{target}']['cones']
-    percentile = scipy.stats.percentileofscore(df.cones, cones)
-    if num <= 0:
+    percentile = scipy.stats.percentileofscore(df.cones, cones) #gets the percentil placement of each player
+    if num <= 0: #prevents negatives or zero bets
         await ctx.send('Make a better bet.')
     else:
-        if users['<@!{}>'.format(ctx.author.id)]['bet'] == 0:
-            if num <= users['<@!{}>'.format(ctx.author.id)]['cones']:
+        if users['<@!{}>'.format(ctx.author.id)]['bet'] == 0: #players can only place bets if their bet is at 0 to prevent double bets.
+            if num <= users['<@!{}>'.format(ctx.author.id)]['cones']: #makes sure the player has enough cones to pay for the bet
                 users['<@!{}>'.format(ctx.author.id)]['bet'] = num
                 users['<@!{}>'.format(ctx.author.id)]['cones'] -= num
-                if percentile < 20:
-                    users[f'{target}']['multiplier'] = 2
-                elif percentile < 75:
-                    users[f'{target}']['multiplier'] = 1.5
+                if percentile < low_bracket:  #checks what percentile the player is in to adjust the multiplier
+                    users[f'{target}']['multiplier'] = highest
+                    await ctx.send('{0} is betting {1} cones with a {2} multiplier, they stand to gain {3} cones.'.format(f'<@!{ctx.author.id}>', num, users[f'{target}']['multiplier'], int(1 + (users[f'{target}']['multiplier'] * users[f'{target}']['bet']))))
+                elif percentile < medium_bracket:
+                    users[f'{target}']['multiplier'] = higher
+                    await ctx.send('{0} is betting {1} cones with a {2} multiplier, they stand to gain {3} cones.'.format(f'<@!{ctx.author.id}>', num, users[f'{target}']['multiplier'], int(1 + (users[f'{target}']['multiplier'] * users[f'{target}']['bet']))))
+                elif percentile < high_bracket:
+                    users[f'{target}']['multiplier'] = high
+                    await ctx.send('{0} is betting {1} cones with a {2} multiplier, they stand to gain {3} cones.'.format(f'<@!{ctx.author.id}>', num, users[f'{target}']['multiplier'], int(1 + (users[f'{target}']['multiplier'] * users[f'{target}']['bet']))))
+                elif percentile < higher_bracket:
+                    users[f'{target}']['multiplier'] = medium
+                    await ctx.send('{0} is betting {1} cones with a {2} multiplier, they stand to gain {3} cones.'.format(f'<@!{ctx.author.id}>', num, users[f'{target}']['multiplier'], int(1 + (users[f'{target}']['multiplier'] * users[f'{target}']['bet']))))
                 else:
-                    users[f'{target}']['multiplier'] = 1.25
-                    await ctx.send('{0} is betting {1} cones with a {2} multiplier, they now have {3} cones.'.format(f'<@!{ctx.author.id}>', num, users[f'{target}']['multiplier'], users['<@!{}>'.format(ctx.author.id)]['cones']))
+                    users[f'{target}']['multiplier'] = low
+                    await ctx.send('{0} is betting {1} cones with a {2} multiplier, they stand to gain {3} cones.'.format(f'<@!{ctx.author.id}>', num, users[f'{target}']['multiplier'], int(1 + (users[f'{target}']['multiplier'] * users[f'{target}']['bet']))))
+                if int(cones) == num: #check to see if the player is betting all of their cones
+                    users[f'{target}']['multiplier'] = users[f'{target}']['multiplier'] * 2
+                    await ctx.send('{0} is betting all of their cones! Goodluck and enjoy the double multipler on top of your multiplier ;).'.format(f'<@!{ctx.author.id}>'))
             else:
                 await ctx.send('{} doesn\'t have the cones to make that bet :( how embarrassing.'.format(f'<@!{ctx.author.id}>'))
         else:
@@ -110,7 +195,7 @@ async def bet(ctx, num):
         json.dump(users, f)
 
 @bot.command()
-#shows teams
+#shows bets
 async def show_bets(ctx):
     with open('users.json', 'r') as f:
         users = json.load(f)
@@ -158,12 +243,17 @@ async def add_cone(ctx, target, num=1):
         users = json.load(f)            #read the json
     if not f'{target}' in users:        #create a entry for the user if one doesn't already exist
         users[f'{target}'] = {}
-        users[f'{target}']['cones'] = 0
+        users[f'{target}']['cones'] = 1
+        users[f'{target}']['multiplier'] = 4
+        users[f'{target}']['bet'] = 0
+        users[f'{target}']['team'] = 0
+        users[f'{target}']['nickname'] = f'{target}'
     users[f'{target}']['cones'] += num + (users[f'{target}']['bet'] * users[f'{target}']['multiplier'])      #modify the number of cones
     users[f'{target}']['bet'] = 0
+    target_cones = int(users[target]['cones'])
     with open('users.json', 'w') as f:      #write the changes to the json
         json.dump(users, f)
-    await ctx.send('{0} {1} has {2} cones to their name!'.format(random.choice(words) ,f'{target}',users[f'{target}']['cones']))
+    await ctx.send('{0} {1} has {2} cones to their name!'.format(random.choice(words), target, target_cones))
 
 @bot.command()
 @commands.has_role('Cone of Dunshire')
@@ -226,9 +316,10 @@ async def remove_cone(ctx, target, num=1):
         users[f'{target}'] = {}
         users[f'{target}']['cones'] = 0
     users[f'{target}']['cones'] -= num  #modify the number of cones
+    target_cones = int(users[target]['cones'])
     with open('users.json', 'w') as f:  #write the changes to the json
         json.dump(users, f)
-    await ctx.send('{0} {1} only has {2} cones left to their name! ROFLMFAO'.format(random.choice(words) ,f'{target}',users[f'{target}']['cones']))
+    await ctx.send('{0} {1} only has {2} cones left to their name! ROFLMFAO'.format(random.choice(words) ,f'{target}',target_cones))
 
 @bot.command(aliases=['give_cones'])
 #give cones
@@ -237,15 +328,13 @@ async def give_cone(ctx, target, num=1):
         users = json.load(f)            #read the json
     if users['<@!{}>'.format(ctx.author.id)]['cones'] >= num:
         users[f'{target}']['cones'] += num      #add the number of cones to target
-        await ctx.send('{0} now has {1} cones to their name!'.format(f'{target}',users[f'{target}']['cones']))
+        await ctx.send('{0} now has {1} cones to their name!'.format(f'{target}',int(users[f'{target}']['cones'])))
         users['<@!{}>'.format(ctx.author.id)]['cones'] -= num  #subtract number of cones from author
-        await ctx.send('{0} now has {1} cones to their name!'.format(f'<@!{ctx.author.id}>',users['<@!{}>'.format(ctx.author.id)]['cones']))
+        await ctx.send('{0} now has {1} cones to their name!'.format(f'<@!{ctx.author.id}>',int(users['<@!{}>'.format(ctx.author.id)]['cones'])))
     else:
         await ctx.send('{0} only has {1} cones to their name, that isn\'t enough for this transaction!'.format(f'<@!{ctx.author.id}>',users['<@!{}>'.format(ctx.author.id)]['cones']))
     with open('users.json', 'w') as f:  #write the changes to the json
         json.dump(users, f)
-
-
 
 @bot.command()
 #sets team name
@@ -266,7 +355,7 @@ async def show_teams(ctx):
         df = df.T
         df['names'] = df.index
         df = df.set_index('team')
-        df = df.drop(columns=['names', 'cones'])
+        df = df.drop(columns=['names', 'cones', 'multiplier', 'bet'])
     await ctx.send(df.drop(0).sort_values(by=['team'])) #sends the dataframe sorted by cones
 
 @bot.command(aliases=['reset'])
@@ -295,7 +384,7 @@ async def team_cone(ctx, *, temp):
             users[user]['bet'] = 0
     with open('users.json', 'w') as f:  #write the changes to the json
         json.dump(users, f)
-    await ctx.send('Team {0} has won a cone. Every member of the team gains one!'.format(temp))
+    await ctx.send('Team {0} has won a cone. Every member of the team gains one (plus any bets)!'.format(temp))
 
 @bot.command(aliases=['show_cone'])
 #shows how many cones the target has, if no target then self
@@ -306,7 +395,7 @@ async def show_cones(ctx,target=None):
     if target == None:
         target = '<@!{}>'.format(ctx.author.id)
     if f'{target}' in users:
-        await ctx.send('{0} has {1} cones.'.format(f'{target}', users[f'{target}']['cones']))
+        await ctx.send('{0} has {1} cones, and a {2} multiplier.'.format(f'{target}', int(users[f'{target}']['cones']), users[f'{target}']['multiplier']))
     else:
          await ctx.send('This user has no cones yet.')
 
@@ -320,8 +409,21 @@ async def show_leader(ctx):
         df['names'] = df.index
         df.cones = df.cones.astype(int)
         df = df.set_index('cones')
-        df = df.drop(columns=['names', 'team'])
+        df = df.drop(columns=['names', 'team', 'bet', 'multiplier'])
     await ctx.send(df.sort_values(by=['cones'], ascending=False)) #sends the dataframe sorted by cones
+
+@bot.command(aliases=['mults'])
+#shows the leaderboard
+async def show_multiplier(ctx):
+    with open('users.json', 'r') as f:
+        users = json.load(f)
+        df = pd.read_json('users.json') #creates a dataframe out of the json
+        df = df.T
+        df['names'] = df.index
+        #df.cones = df.cones.astype(int)
+        df = df.set_index('multiplier')
+        df = df.drop(columns=['names', 'team', 'bet', 'cones'])
+    await ctx.send(df.sort_values(by=['multiplier'])) #sends the dataframe sorted by cones
 
 @bot.command(aliases=['stats'])
 #shows the players stats
@@ -334,10 +436,10 @@ async def show_stats(ctx):
         df.cones = df.cones.astype(int)
         df = df.drop(columns=['names', 'team'])
         target = '<@!{}>'.format(ctx.author.id)
-        cones = users[f'{target}']['cones']
-        difference_from_top = df.cones.max() - users[f'{target}']['cones']
-        percentile = scipy.stats.percentileofscore(df.cones, cones)
-    await ctx.send('You have {0} cones. \nYou are in the {1} percentile! omg. \nYou have {2} fewer cones than the current leader.'.format(cones, percentile, difference_from_top))
+        cones = int(users[f'{target}']['cones'])
+        difference_from_top = int(df.cones.max() - users[f'{target}']['cones'])
+        percentile = round(scipy.stats.percentileofscore(df.cones, cones), 2)
+    await ctx.send('You have {0} cones. \nYou are in the {1} percentile! omg. \nYou have a {2} multiplier. \nYou have {3} fewer cones than the current leader.'.format(cones, percentile, users[f'{target}']['multiplier'],difference_from_top))
 
 
 @bot.command(aliases=['command'])
