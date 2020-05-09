@@ -41,6 +41,7 @@ async def on_ready():
     print('Bot is ready.')
 
 @bot.event
+@has_permissions(manage_roles=True)
 #creates an account in our system when a user joins the server
 async def on_member_join(member):
     with open('users.json', 'r') as f:
@@ -54,6 +55,7 @@ async def on_member_join(member):
         users[f'{target}']['team'] = 0
         users[f'{target}']['nickname'] = f'{target}'
         users[f'{target}']['admin'] = 0
+        users[f'{target}']['bid'] = 0
         role = discord.utils.get(member.guild.roles, name = "Agility Cone")
         await member.add_roles(role)
     with open('users.json', 'w') as f:  #write the changes to the json
@@ -82,6 +84,7 @@ async def on_message(message):
 
 @bot.command()
 @commands.has_role('Cone of Dunshire')
+#as the name suggests, this will reset all cone values to the minimum cones value.
 async def firesail(ctx):
     with open('users.json', 'r') as f:
         users = json.load(f)            #read the json
@@ -91,19 +94,75 @@ async def firesail(ctx):
         json.dump(users, f)
     await ctx.send('Everything has been burnt to the ground. When the going gets tough, the tough get going.')
 
+@bot.command()
+#function for placing bids for dictatorship
+async def bid(ctx, bid):
+    with open('users.json', 'r') as f:
+        users = json.load(f)
+    bids = int(bid)
+    if 0 < bids <= int(users['<@!{}>'.format(ctx.author.id)]['cones']):
+        users['<@!{}>'.format(ctx.author.id)]['bid'] = bids
+        await ctx.send('You have placed a bid to become the next Dictator. How bold.')
+    else:
+        await ctx.send('Your ambition is greater than your reality. Try bidding within your means.')
+    with open('users.json', 'w') as f:  #write the changes to the json
+        json.dump(users, f)
+
+
+@bot.command()
+@commands.has_role('Cone of Dunshire')
+#resets all bids to 0
+async def reset_bids(ctx):
+    with open('users.json', 'r') as f:
+        users = json.load(f)
+    for user in users:
+        users[user]['bid'] = 0
+    with open('users.json', 'w') as f:  #write the changes to the json
+        json.dump(users, f)
+    await ctx.send('All bids to become The Dictator have been reset.')
+
+@bot.command()
+#shows curent bids
+async def show_bids(ctx):
+    with open('users.json', 'r') as f:
+        users = json.load(f)
+    df = pd.read_json('users.json') #creates a dataframe out of the json
+    df = df.T
+    df['names'] = df.index
+    df = df.set_index('bid')
+    df = df.drop(columns=['names', 'cones', 'team', 'admin', 'bet', 'multiplier'])
+    df = df.drop(0)
+    await ctx.send(df.to_string(index=False)) #sends the dataframe, exluding index to keep the bids secret
+    with open('users.json', 'w') as f:  #write the changes to the json
+        json.dump(users, f)
+
+@bot.command()
+@commands.has_role('Cone of Dunshire')
+#collect the bids
+async def collect_bids(ctx):
+    with open('users.json', 'r') as f:
+        users = json.load(f)
+    df = pd.read_json('users.json') #creates a dataframe out of the json
+    df = df.T
+    df['names'] = df.index
+    df['bid'] = df.bid.astype(int)
+    df = df.sort_values(by=['bid'], ascending=False)
+    winner = df.names.iloc[0] #selects the highest bid, if a tie occurs it will randomly select one
+    temp = users[winner]['cones']
+    users[winner]['cones'] -= users[winner]['bid'] #removes a cone from the top bidders stash
+    await ctx.send('The new dictator is {}!'.format(winner))
+    with open('users.json', 'w') as f:  #write the changes to the json
+        json.dump(users, f)
+    await reset_bids(ctx)
+    ### use reset_bids at the end of this
+
 @bot.command(aliases=['cancel_bets'])
 @commands.has_role('Cone of Dunshire')
 #sets all bets to 0, refunding the bet
 async def bet_cancel(ctx):
     with open('users.json', 'r') as f:
         users = json.load(f)            #read the json
-    df = pd.read_json('users.json') #creates a dataframe out of the json
-    df = df.T
-    df['names'] = df.index
-    df.cones = df.cones.astype(int)
-    df = df.drop(columns=['names', 'team'])
     for user in users:
-        cones = users[user]['cones']
         users[user]['cones'] += users[user]['bet']
         users[user]['bet'] = 0
     with open('users.json', 'w') as f:  #write the changes to the json
@@ -132,20 +191,28 @@ async def set_roles(ctx):
     cinder = discord.utils.get(ctx.guild.roles, name = "Cinder Cone")
     agility = discord.utils.get(ctx.guild.roles, name = "Agility Cone")
     for id in df_sugar.index:
-        user = id.strip('<>@!')
-        member_id = ctx.guild.get_member(user_id=int(user)) #pulls a member object from the user id, allows me to add and remove roles from the member in discord
-        await member_id.add_roles(sugar)
-        await member_id.remove_roles(cinder)
+        try:
+            user = id.strip('<>@!')
+            member_id = ctx.guild.get_member(user_id=int(user)) #pulls a member object from the user id, allows me to add and remove roles from the member in discord
+            await member_id.add_roles(sugar, cinder, agility)
+        except:
+            pass
     for id in df_cinder.index:
-        user = id.strip('<>@!')
-        member_id = ctx.guild.get_member(user_id=int(user))
-        await member_id.add_roles(cinder)
-        await member_id.remove_roles(sugar)
+        try:
+            user = id.strip('<>@!')
+            member_id = ctx.guild.get_member(user_id=int(user))
+            await member_id.add_roles(cinder, agility)
+            await member_id.remove_roles(sugar)
+        except:
+            pass
     for id in df_agility.index:
-        user = id.strip('<>@!')
-        member_id = ctx.guild.get_member(user_id=int(user))
-        await member_id.add_roles(agility)
-        await member_id.remove_roles(sugar, cinder)
+        try:
+            user = id.strip('<>@!')
+            member_id = ctx.guild.get_member(user_id=int(user))
+            await member_id.add_roles(agility)
+            await member_id.remove_roles(sugar, cinder)
+        except:
+            pass
     await ctx.send('The roles have been updated for the week! Better luck next week. Remember: Cone\'s will set you free, So keep on betting!')
 
 @bot.command(aliases=['collect'])
@@ -260,7 +327,7 @@ async def show_bets(ctx):
         df = df.drop(columns=['names', 'cones', 'team', 'admin'])
     await ctx.send(df.drop(0).sort_values(by=['bet'])) #sends the dataframe sorted by cones
 
-@bot.command(aliases=['gib'])
+@bot.command(aliases=['gib', 'Gib'])
 @commands.has_role('Cone of Dunshire')
 #adds a cone to the target
 async def add_cone(ctx, target, num=1):
@@ -426,7 +493,7 @@ async def show_teams(ctx):
         df = df.T
         df['names'] = df.index
         df = df.set_index('team')
-        df = df.drop(columns=['names', 'cones', 'multiplier', 'bet', 'admin'])
+        df = df.drop(columns=['names', 'cones', 'multiplier', 'bet', 'admin', 'bid'])
     await ctx.send(df.drop(0).sort_values(by=['team'])) #sends the dataframe sorted by cones
 
 @bot.command(aliases=['reset'])
@@ -461,10 +528,13 @@ async def team_cone(ctx, *, temp):
         users = json.load(f)            #read the json
     temp = temp.lower()
     for user in users:
-        users[user]['team'] = str(users[user]['team']).lower() #changes the team name to be a string and lower case
-        if users[user]['team'] == temp:
-            users[user]['cones'] += 1 + (users[user]['bet'] * users[user]['multiplier'])
-            users[user]['bet'] = 0
+        if users[user]['team'] != 0:
+            users[user]['team'] = str(users[user]['team']).lower() #changes the team name to be a string and lower case
+            if users[user]['team'] == temp:
+                users[user]['cones'] += 1 + (users[user]['bet'] * users[user]['multiplier'])
+                users[user]['bet'] = 0
+        else:
+            pass
     with open('users.json', 'w') as f:  #write the changes to the json
         json.dump(users, f)
     await ctx.send('Team {0} has won a cone. Every member of the team gains one (plus any bets)!'.format(temp))
@@ -492,7 +562,7 @@ async def show_leader(ctx):
         df['names'] = df.index
         df.cones = df.cones.astype(int)
         df = df.set_index('cones')
-        df = df.drop(columns=['names', 'team', 'bet', 'multiplier', 'admin'])
+        df = df.drop(columns=['names', 'team', 'bet', 'multiplier', 'admin', 'bid'])
     await ctx.send(df.sort_values(by=['cones'], ascending=False)) #sends the dataframe sorted by cones
 
 @bot.command(aliases=['top'])
@@ -505,7 +575,7 @@ async def show_top(ctx):
         df['names'] = df.index
         df.cones = df.cones.astype(int)
         df = df.set_index('cones')
-        df = df.drop(columns=['names', 'team', 'bet', 'multiplier', 'admin'])
+        df = df.drop(columns=['names', 'team', 'bet', 'multiplier', 'admin', 'bid'])
     await ctx.send(df.sort_values(by=['cones'], ascending=False).head()) #sends the dataframe sorted by cones
 
 @bot.command(aliases=['mults'])
@@ -558,7 +628,10 @@ async def bot_commands(ctx):
                        '.stats',
                        '.bet',
                        '.show_bets',
-                       '.top']
+                       '.top',
+                       '.bid',
+                       '.show_bids',
+                       '.rules']
     df_t['function'] = ['answers a yes or no question',
                        'pulls a random card',
                        'da fuq you think it does?',
@@ -575,9 +648,24 @@ async def bot_commands(ctx):
                        'shows general stats for cones',
                        'allows you to place a bet of cones',
                        'shows all players who have placed bets',
-                       'shows the people with the largest coners']
+                       'shows the people with the largest coners',
+                       'places a bid to become The Dictator',
+                       'shows a list of everyone who has placed a bid',
+                       'lists current rules for the channel and its games']
     df_t = df_t.set_index('commands')
     await ctx.send(df_t)
+
+@bot.command()
+#shows a list of rules for various activities
+async def rules(ctx, value='basic'):
+    if value == 'basic':
+        await ctx.send('Welcome to the rules. To access rules on specific topics for the channel you may type:\n".rules betting"\n".rules dictator"')
+    elif value == 'betting':
+        await ctx.send('Greetings {}. Below you will find the rules for betting your cones away.\nYou may bet any number of cones up to the number that you own (type .stats to see) while playing in a game with other members of the channel. Type .bet [# of cones you want to bet]. Example: ".bet 5". Alternatively you can bet everything you have by typing ".bet max"; betting max will reward you with an extra multiplier to your winnings.\nThe currently accepted games to bet on are: Heroes Of The Storm.\nIf you do not want to play but wish to bet on someone else\'s game you may. However, you may only bet on them to win.'.format(ctx.author.mention))
+    elif value == 'dictator':
+        await ctx.send('Hello future Dictator {}. Below you will find the path to domination.\nAn anonymous bidding war must take place. Whoever bids the highest amount will become Dictator.\nTo place a bid you must DM me (The Oracle of Cones) the following ".bid [insert number to bid here]". Example: ".bid 5". If you fail to do this in a DM with me then everyone will see your bid, making you easy to defeat and causing you to look extremely foolish.\nIf you place a bid and are defeated by someone else, your cones will be returned to you. If you bid the highest number of cones you forfeit those cones in the pursuit of Ultimate Power.\nIn the event of a tie, I (The Oracle of Cones) will randomly select a winner from among the highest bidders.\nAt any point someone may offer to buy the dictatorship from the current Dictator. If the current Dictator accepts the buyout then the title is transferred.\nUpon recieving the title of Dictator, you must select a General to serve at your side.\nAt any point either the Dictator or General can command anyone of a lower rank to drink. The General cannot tell The Dictator to drink, but either of them can impose those drinking whims upon all plebians.\nShould The General wish to have a coup to overthrow The Dictator, they may. The requirements for this are simple- with 75% of the popular vote, The General becomes the new Dictator. At this time the new Dictator must appoint a new General and the old Dictator becomes a plebian.\nIn case it wasn\'t clear: if you are not The Dictator or The General, you are a plebian. You are a commoner. You are unremarkable, insignificant, and smelly. As such, The Dictator and General, in their insurmountable wisdom and infinite power, can command you to drink at any time.'.format(ctx.author.mention))
+    else:
+        await ctx.send('There are no rules for that specific subject yet. You may prostrate yourself at the feet of one of the Cone of Dunshire admins to plea with them that this situation be rememied at once. The risk of beheading is.... small.')
 
 @bot.command()
 #gets the latency of the bot
