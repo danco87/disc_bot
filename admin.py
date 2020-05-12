@@ -16,11 +16,11 @@ bot = commands.Bot(command_prefix = '.')
 os.chdir(r'D:\Bot\github')
 
 #betting multipliers
-low = 1.15
-medium = 1.4
-high = 1.75
-higher = 2
-highest = 4
+low = 1.25
+medium = 2
+high = 2.5
+higher = 4
+highest = 6
 
 #minimum number of cones someone can have
 minimum_cones = 2
@@ -41,19 +41,19 @@ async def on_ready():
     print('Bot is ready.')
 
 @bot.event
-@has_permissions(manage_roles=True)
+#@has_permissions(manage_roles=True)
 #creates an account in our system when a user joins the server
 async def on_member_join(member):
     with open('users.json', 'r') as f:
         users = json.load(f)            #read the json
-    target = member.author.id
+    target = member.id
     if not f'{target}' in users:        #create a entry for the user if one doesn't already exist
         users[f'{target}'] = {}
-        users[f'{target}']['cones'] = 2
+        users[f'{target}']['cones'] = minimum_cones
         users[f'{target}']['multiplier'] = higher
         users[f'{target}']['bet'] = 0
         users[f'{target}']['team'] = 0
-        users[f'{target}']['nickname'] = f'{target}'
+        users[f'{target}']['nickname'] = member.mention
         users[f'{target}']['admin'] = 0
         users[f'{target}']['bid'] = 0
         role = discord.utils.get(member.guild.roles, name = "Agility Cone")
@@ -150,11 +150,13 @@ async def collect_bids(ctx):
     winner = df.names.iloc[0] #selects the highest bid, if a tie occurs it will randomly select one
     temp = users[winner]['cones']
     users[winner]['cones'] -= users[winner]['bid'] #removes a cone from the top bidders stash
+    if users[winner]['cones'] < minimum_cones:
+        users[winner]['cones'] = minimum_cones
     await ctx.send('The new dictator is {}!'.format(winner))
     with open('users.json', 'w') as f:  #write the changes to the json
         json.dump(users, f)
     await reset_bids(ctx)
-    ### use reset_bids at the end of this
+
 
 @bot.command(aliases=['cancel_bets'])
 @commands.has_role('Cone of Dunshire')
@@ -364,9 +366,10 @@ async def add_cone(ctx, target, num=1):
         users = json.load(f)            #read the json
     if not f'{target}' in users:        #create a entry for the user if one doesn't already exist
         users[f'{target}'] = {}
-        users[f'{target}']['cones'] = minimum_cones
+        users[f'{target}']['cones'] = minimum_cones - 1
         users[f'{target}']['multiplier'] = high
         users[f'{target}']['bet'] = 0
+        users[f'{target}']['bid'] = 0
         users[f'{target}']['team'] = 0
         users[f'{target}']['nickname'] = f'{target}'
         users[f'{target}']['admin'] = 0
@@ -451,10 +454,10 @@ async def remove_cone(ctx, target, num=1):
     with open('users.json', 'r') as f:
         users = json.load(f)            #read the json
     if not f'{target}' in users:        #create a entry for the user if one doesn't already exist
-        users[f'{target}'] = {}
-        users[f'{target}']['cones'] = 0
-    users[f'{target}']['cones'] -= num  #modify the number of cones
-    target_cones = int(users[target]['cones'])
+        await ctx.send('User is not in our system. Error detected. Eliminate this threat at your earliest convenience.')
+    else:
+        users[f'{target}']['cones'] -= num  #modify the number of cones
+        target_cones = int(users[target]['cones'])
     with open('users.json', 'w') as f:  #write the changes to the json
         json.dump(users, f)
     await ctx.send('{0} {1} only has {2} cones left to their name! ROFLMFAO'.format(random.choice(words) ,f'{target}',target_cones))
@@ -539,6 +542,13 @@ async def team_cone(ctx, *, temp):
         json.dump(users, f)
     await ctx.send('Team {0} has won a cone. Every member of the team gains one (plus any bets)!'.format(temp))
 
+@bot.command()
+@commands.has_role('Cone of Dunshire')
+#awards a winning team and collects lost bets
+async def winner_winner(ctx, x):
+    await team_cone(ctx, temp=x)
+    await bet_collect(ctx)
+
 @bot.command(aliases=['show_cone'])
 #shows how many cones the target has, if no target then self
 async def show_cones(ctx,target=None):
@@ -588,7 +598,7 @@ async def show_multiplier(ctx):
         df['names'] = df.index
         #df.cones = df.cones.astype(int)
         df = df.set_index('multiplier')
-        df = df.drop(columns=['names', 'team', 'bet', 'cones', 'admin'])
+        df = df.drop(columns=['names', 'team', 'bet', 'cones', 'admin', 'bid'])
     await ctx.send(df.sort_values(by=['multiplier'])) #sends the dataframe sorted by cones
 
 @bot.command(aliases=['stats'])
