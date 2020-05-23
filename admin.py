@@ -7,6 +7,7 @@ import pandas as pd
 import random
 import scipy
 from scipy import stats
+import datetime
 
 
 pd.set_option('display.max_columns', None)
@@ -22,17 +23,22 @@ high = 2.5
 higher = 4
 highest = 6
 
+#cone images in url format
+bronze_cone = 'https://i.imgur.com/yHO3bsl.png'
+silver_cone = 'https://i.imgur.com/ePD2lkm.png'
+gold_cone = 'https://i.imgur.com/P5xtXBb.png'
+
 #minimum number of cones someone can have
-minimum_cones = 2
+minimum_cones = 4
 
 #bet max multiplier (rewards players for betting all of their cones)
-bet_max = 1.5
+bet_max = 1.25
 
 #percentile brackets
-low_bracket = 25
-medium_bracket = 50
-high_bracket = 75
 higher_bracket = 95
+high_bracket = 75
+medium_bracket = 50
+low_bracket = 25
 
 
 #This is an all-purpose bot for The Cone Zone
@@ -41,7 +47,6 @@ async def on_ready():
     print('Bot is ready.')
 
 @bot.event
-#@has_permissions(manage_roles=True)
 #creates an account in our system when a user joins the server
 async def on_member_join(member):
     with open('users.json', 'r') as f:
@@ -56,6 +61,7 @@ async def on_member_join(member):
         users[f'{target}']['nickname'] = member.mention
         users[f'{target}']['admin'] = 0
         users[f'{target}']['bid'] = 0
+        users[f'{target}']['points'] = 0
         role = discord.utils.get(member.guild.roles, name = "Agility Cone")
         await member.add_roles(role)
     with open('users.json', 'w') as f:  #write the changes to the json
@@ -84,6 +90,49 @@ async def on_message(message):
 
 @bot.command()
 @commands.has_role('Cone of Dunshire')
+async def tableflip(ctx):
+    await ctx.send('(ノಠ益ಠ)ノ彡┻━┻')
+
+@bot.command()
+async def cone_emojis(ctx, target):
+    with open('users.json', 'r') as f:
+        users = json.load(f)            #read the json
+    if users[target]['points'] == 'admin':
+        #admin_cone
+        return bronze_cone
+    if users[target]['points'] >= 6:
+        #obsidian
+        pass
+    elif users[target]['points'] >= 4:
+        #diamond
+        pass
+    elif users[target]['points'] >= 2:
+        return gold_cone
+    elif users[target]['points'] >= 1:
+        return silver_cone
+    else:
+        return bronze_cone
+
+@bot.command()
+async def testembed(ctx):
+    test_embed = discord.Embed(
+        title = 'Title',
+        description = 'This is a description.',
+        color = discord.Color.blue()
+    )
+
+    test_embed.set_footer(text='This is a footer.')
+    test_embed.set_image(url='https://i.imgur.com/fCK5I1s.jpg')
+    test_embed.set_thumbnail(url='https://i.imgur.com/fCK5I1s.jpg')
+    test_embed.set_author(name='Author Name', icon_url='https://imgur.com/a/x2uYN8i')
+    test_embed.add_field(name='Field Name', value='Field Value', inline=False)
+    test_embed.add_field(name='Field Name', value='Field Value', inline=True)
+    test_embed.add_field(name='Field Name', value='Field Value', inline=True)
+
+    await ctx.send(embed=test_embed)
+
+@bot.command()
+@commands.has_role('Cone of Dunshire')
 #as the name suggests, this will reset all cone values to the minimum cones value.
 async def firesail(ctx):
     with open('users.json', 'r') as f:
@@ -108,7 +157,6 @@ async def bid(ctx, bid):
     with open('users.json', 'w') as f:  #write the changes to the json
         json.dump(users, f)
 
-
 @bot.command()
 @commands.has_role('Cone of Dunshire')
 #resets all bids to 0
@@ -130,9 +178,24 @@ async def show_bids(ctx):
     df = df.T
     df['names'] = df.index
     df = df.set_index('bid')
-    df = df.drop(columns=['names', 'cones', 'team', 'admin', 'bet', 'multiplier'])
+    df = df.drop(columns=['names', 'cones', 'team', 'admin', 'bet', 'multiplier', 'points'])
     df = df.drop(0)
     await ctx.send(df.to_string(index=False)) #sends the dataframe, exluding index to keep the bids secret
+    with open('users.json', 'w') as f:  #write the changes to the json
+        json.dump(users, f)
+
+@bot.command()
+#shows curent points
+async def show_points(ctx):
+    with open('users.json', 'r') as f:
+        users = json.load(f)
+    df = pd.read_json('users.json') #creates a dataframe out of the json
+    df = df.T
+    df['names'] = df.index
+    df = df.set_index('points')
+    df = df.drop(columns=['names', 'cones', 'team', 'admin', 'bet', 'multiplier', 'bid'])
+    df = df.drop(0)
+    await ctx.send(df.sort_values(by=['points'], ascending=False))
     with open('users.json', 'w') as f:  #write the changes to the json
         json.dump(users, f)
 
@@ -157,7 +220,6 @@ async def collect_bids(ctx):
         json.dump(users, f)
     await reset_bids(ctx)
 
-
 @bot.command(aliases=['cancel_bets'])
 @commands.has_role('Cone of Dunshire')
 #sets all bets to 0, refunding the bet
@@ -173,6 +235,19 @@ async def bet_cancel(ctx):
     await set_odds(ctx)
 
 @bot.command()
+@commands.has_role('Cone of Dunshire')
+#sets all bets to 0, refunding the bet
+async def rising_tide(ctx):
+    with open('users.json', 'r') as f:
+        users = json.load(f)            #read the json
+    for user in users:
+        if users[user]['cones'] < minimum_cones:
+            users[user]['cones'] = minimum_cones
+    with open('users.json', 'w') as f:  #write the changes to the json
+        json.dump(users, f)
+    await ctx.send('Confucius says: A rising tide raises all ships.')
+
+@bot.command()
 @has_permissions(manage_roles=True)
 @commands.has_role('Cone of Dunshire')
 #sets all roles according to the users standing on the cone leaderboard
@@ -180,22 +255,23 @@ async def set_roles(ctx):
     with open('users.json', 'r') as f:
         users = json.load(f)            #read the json
     df = pd.read_json('users.json') #creates a dataframe out of the json
-    df = df.T
-    df['names'] = df.index
+    df = df.T #transposes the dataframe
+    df['names'] = df.index #sets the value of names to be equal to the index (which is the user ID)
     df.cones = df.cones.astype(int)
-    df = df.drop(columns=['nickname', 'team', 'bet', 'multiplier'])
-    df = df[df.admin != 1]
-    df = df.sort_values(by=['cones'], ascending=False)
+    df = df.drop(columns=['nickname', 'team', 'bet', 'multiplier']) #drops useless columns
+    df = df[df.admin != 1] #removes admins from the dataframe (admins dont get ranked)
+    df = df.sort_values(by=['cones'], ascending=False) #sorts the users by how many cones they have
     df_sugar = df.iloc[0:3]  #creates a new dataframe for each role
     df_cinder = df.iloc[3:8]
     df_agility = df.iloc[8:]
-    sugar = discord.utils.get(ctx.guild.roles, name = "Sugar Cone")  #creates an object for the role
+    sugar = discord.utils.get(ctx.guild.roles, name = "Sugar Cone")  #creates an object for each role
     cinder = discord.utils.get(ctx.guild.roles, name = "Cinder Cone")
     agility = discord.utils.get(ctx.guild.roles, name = "Agility Cone")
     for id in df_sugar.index:
         try:
             user = id.strip('<>@!')
             member_id = ctx.guild.get_member(user_id=int(user)) #pulls a member object from the user id, allows me to add and remove roles from the member in discord
+            users[id]['points'] += 1
             await member_id.add_roles(sugar, cinder, agility)
         except:
             pass
@@ -215,7 +291,9 @@ async def set_roles(ctx):
             await member_id.remove_roles(sugar, cinder)
         except:
             pass
-    await ctx.send('The roles have been updated for the week! Better luck next week. Remember: Cone\'s will set you free, So keep on betting!')
+    await ctx.send('The roles have been updated for the week! Better luck next time. Remember: Cone\'s will set you free, So keep on betting!')
+    with open('users.json', 'w') as f:  #write the changes to the json
+        json.dump(users, f)
 
 @bot.command(aliases=['collect'])
 @commands.has_role('Cone of Dunshire')
@@ -223,11 +301,6 @@ async def set_roles(ctx):
 async def bet_collect(ctx):
     with open('users.json', 'r') as f:
         users = json.load(f)            #read the json
-    df = pd.read_json('users.json') #creates a dataframe out of the json
-    df = df.T
-    df['names'] = df.index
-    df.cones = df.cones.astype(int)
-    df = df.drop(columns=['names', 'team'])
     for user in users:
         if users[user]['cones'] < minimum_cones:
             users[user]['cones'] = minimum_cones
@@ -273,7 +346,7 @@ async def bet(ctx, num):
         users = json.load(f)            #read the json
     if num == 'random': #allows players to place a random bet
         num = random.randint(1,int(users['<@!{}>'.format(ctx.author.id)]['cones']))
-        await ctx.send('The brave {} is randomly betting!'.format(f'<@!{ctx.author.id}>'))
+        await ctx.send('The brave {} is betting a random amount!'.format(f'<@!{ctx.author.id}>'))
     if num == 'max':
         num = users['<@!{}>'.format(ctx.author.id)]['cones']
     num = int(num) #changes everything passed in to an int to avoid breaking
@@ -284,6 +357,8 @@ async def bet(ctx, num):
     df = df.drop(columns=['names', 'team'])
     target = '<@!{}>'.format(ctx.author.id)
     cones = users[f'{target}']['cones']
+    emoji = await cone_emojis(ctx, target=target)
+    nickname = users[f'{target}']['nickname']
     percentile = scipy.stats.percentileofscore(df.cones, cones) #gets the percentil placement of each player
     if num <= 0: #prevents negatives or zero bets
         await ctx.send('Make a better bet.')
@@ -292,28 +367,86 @@ async def bet(ctx, num):
             if num <= users['<@!{}>'.format(ctx.author.id)]['cones']: #makes sure the player has enough cones to pay for the bet
                 users['<@!{}>'.format(ctx.author.id)]['bet'] = num
                 users['<@!{}>'.format(ctx.author.id)]['cones'] -= num
-                if percentile < low_bracket:  #checks what percentile the player is in to adjust the multiplier
-                    users[f'{target}']['multiplier'] = highest
-                    await ctx.send('{0} is betting {1} cones with a {2} multiplier, they stand to gain {3} cones.'.format(f'<@!{ctx.author.id}>', num, users[f'{target}']['multiplier'], int(1 + (users[f'{target}']['multiplier'] * users[f'{target}']['bet']))))
-                elif percentile < medium_bracket:
-                    users[f'{target}']['multiplier'] = higher
-                    await ctx.send('{0} is betting {1} cones with a {2} multiplier, they stand to gain {3} cones.'.format(f'<@!{ctx.author.id}>', num, users[f'{target}']['multiplier'], int(1 + (users[f'{target}']['multiplier'] * users[f'{target}']['bet']))))
-                elif percentile < high_bracket:
-                    users[f'{target}']['multiplier'] = high
-                    await ctx.send('{0} is betting {1} cones with a {2} multiplier, they stand to gain {3} cones.'.format(f'<@!{ctx.author.id}>', num, users[f'{target}']['multiplier'], int(1 + (users[f'{target}']['multiplier'] * users[f'{target}']['bet']))))
-                elif percentile < higher_bracket:
-                    users[f'{target}']['multiplier'] = medium
-                    await ctx.send('{0} is betting {1} cones with a {2} multiplier, they stand to gain {3} cones.'.format(f'<@!{ctx.author.id}>', num, users[f'{target}']['multiplier'], int(1 + (users[f'{target}']['multiplier'] * users[f'{target}']['bet']))))
-                else:
-                    users[f'{target}']['multiplier'] = low
-                    await ctx.send('{0} is betting {1} cones with a {2} multiplier, they stand to gain {3} cones.'.format(f'<@!{ctx.author.id}>', num, users[f'{target}']['multiplier'], int(1 + (users[f'{target}']['multiplier'] * users[f'{target}']['bet']))))
                 if int(cones) == num: #check to see if the player is betting all of their cones
                     users[f'{target}']['multiplier'] = users[f'{target}']['multiplier'] * bet_max
-                    await ctx.send('{0} is betting all of their cones! Goodluck and enjoy the increased multiplier of {1} ;).'.format(f'<@!{ctx.author.id}>', round(users[f'{target}']['multiplier'], 2)))
+                    potential_gain = int(1 + (users[f'{target}']['multiplier'] * users[f'{target}']['bet']) - users[f'{target}']['bet'])
+                    bet_embed = discord.Embed(
+                        title = 'The Cones Have Been Bet',
+                        color = discord.Color(0x001FFF)
+                    )
+                    bet_embed.set_author(name=nickname, icon_url=emoji)
+                    bet_embed.add_field(name='Cones bet:', value=num, inline=True)
+                    bet_embed.add_field(name='Potential gain:', value=potential_gain, inline=True)
+                    await ctx.send(embed=bet_embed)
+                elif percentile < low_bracket:  #checks what percentile the player is in to adjust the multiplier
+                    users[f'{target}']['multiplier'] = highest
+                    potential_gain = int(1 + (users[f'{target}']['multiplier'] * users[f'{target}']['bet']) - users[f'{target}']['bet'])
+                    bet_embed = discord.Embed(
+                        title = 'The Cones Have Been Bet',
+                        color = discord.Color(0x001FFF)
+                    )
+                    bet_embed.set_author(name=nickname, icon_url=emoji)
+                    bet_embed.add_field(name='Cones bet:', value=num, inline=True)
+                    bet_embed.add_field(name='Potential gain:', value=potential_gain, inline=True)
+                    await ctx.send(embed=bet_embed)
+                elif percentile < medium_bracket:
+                    users[f'{target}']['multiplier'] = higher
+                    potential_gain = int(1 + (users[f'{target}']['multiplier'] * users[f'{target}']['bet']) - users[f'{target}']['bet'])
+                    bet_embed = discord.Embed(
+                        title = 'The Cones Have Been Bet',
+                        color = discord.Color(0x001FFF)
+                    )
+                    bet_embed.set_author(name=nickname, icon_url=emoji)
+                    bet_embed.add_field(name='Cones bet:', value=num, inline=True)
+                    bet_embed.add_field(name='Potential gain:', value=potential_gain, inline=True)
+                    await ctx.send(embed=bet_embed)
+                elif percentile < high_bracket:
+                    users[f'{target}']['multiplier'] = high
+                    potential_gain = int(1 + (users[f'{target}']['multiplier'] * users[f'{target}']['bet']) - users[f'{target}']['bet'])
+                    bet_embed = discord.Embed(
+                        title = 'The Cones Have Been Bet',
+                        color = discord.Color(0x001FFF)
+                    )
+                    bet_embed.set_author(name=nickname, icon_url=emoji)
+                    bet_embed.add_field(name='Cones bet:', value=num, inline=True)
+                    bet_embed.add_field(name='Potential gain:', value=potential_gain, inline=True)
+                    await ctx.send(embed=bet_embed)
+                elif percentile < higher_bracket:
+                    users[f'{target}']['multiplier'] = medium
+                    potential_gain = int(1 + (users[f'{target}']['multiplier'] * users[f'{target}']['bet']) - users[f'{target}']['bet'])
+                    bet_embed = discord.Embed(
+                        title = 'The Cones Have Been Bet',
+                        color = discord.Color(0x001FFF)
+                    )
+                    bet_embed.set_author(name=nickname, icon_url=emoji)
+                    bet_embed.add_field(name='Cones bet:', value=num, inline=True)
+                    bet_embed.add_field(name='Potential gain:', value=potential_gain, inline=True)
+                    await ctx.send(embed=bet_embed)
+                else:
+                    users[f'{target}']['multiplier'] = low
+                    potential_gain = int(1 + (users[f'{target}']['multiplier'] * users[f'{target}']['bet']) - users[f'{target}']['bet'])
+                    bet_embed = discord.Embed(
+                        title = 'The Cones Have Been Bet',
+                        color = discord.Color(0x001FFF)
+                    )
+                    bet_embed.set_author(name=nickname, icon_url=emoji)
+                    bet_embed.add_field(name='Cones bet:', value=num, inline=True)
+                    bet_embed.add_field(name='Potential gain:', value=potential_gain, inline=True)
+                    await ctx.send(embed=bet_embed)
             else:
-                await ctx.send('{} doesn\'t have the cones to make that bet :( how embarrassing.'.format(f'<@!{ctx.author.id}>'))
+                bet_embed = discord.Embed(
+                    title = 'You are too broke to make that bet.',
+                    color = discord.Color(0xFF0000)
+                )
+                bet_embed.set_author(name=nickname, icon_url=emoji)
+                await ctx.send(embed=bet_embed)
         else:
-            await ctx.send('You already placed a bet, you will have to wait until next time to bet more!')
+            bet_embed = discord.Embed(
+                title = 'You already placed a bet.',
+                color = discord.Color(0xFFB200)
+            )
+            bet_embed.set_author(name=nickname, icon_url=emoji)
+            await ctx.send(embed=bet_embed)
     with open('users.json', 'w') as f:  #write the changes to the json
         json.dump(users, f)
 
@@ -326,42 +459,13 @@ async def show_bets(ctx):
         df = df.T
         df['names'] = df.index
         df = df.set_index('bet')
-        df = df.drop(columns=['names', 'cones', 'team', 'admin'])
-    await ctx.send(df.drop(0).sort_values(by=['bet'])) #sends the dataframe sorted by cones
+        df = df.drop(columns=['names', 'cones', 'team', 'admin', 'bid'])
+    await ctx.send(df.drop(0).sort_values(by=['bet'])) #sends the dataframe sorted by bets
 
 @bot.command(aliases=['gib', 'Gib'])
 @commands.has_role('Cone of Dunshire')
 #adds a cone to the target
 async def add_cone(ctx, target, num=1):
-    words = ['The magnanimous',
-             'The awesome',
-             'The incredible',
-             'The fortuitous',
-             'The flabbergasted',
-             'The GOAT',
-             'The rebelious',
-             'The emperor',
-             'The genius',
-             'The conqueror',
-             'The one who is better than all things,',
-             'The one who excedes expectations,',
-             'The shiny',
-             'The enthralling',
-             'The bewitching',
-             'The stunning',
-             'The elegant',
-             'The popular',
-             'The intelligent',
-             'The capable',
-             'The confident',
-             'The extremely tall',
-             'The super well endowed',
-             'The highly sought after',
-             'The charming',
-             'The one who lights up a room,',
-             'The hyper-1337',
-             'The one made of carbon and some other stuff too',
-             'The jedi']
     with open('users.json', 'r') as f:
         users = json.load(f)            #read the json
     if not f'{target}' in users:        #create a entry for the user if one doesn't already exist
@@ -373,15 +477,19 @@ async def add_cone(ctx, target, num=1):
         users[f'{target}']['team'] = 0
         users[f'{target}']['nickname'] = f'{target}'
         users[f'{target}']['admin'] = 0
+        users[f'{target}']['points'] = 0
     df = pd.read_json('users.json') #creates a dataframe out of the json
     df = df.T
     df['names'] = df.index
     df.cones = df.cones.astype(int)
     df = df.drop(columns=['names', 'team'])
     users[f'{target}']['cones'] += num + (users[f'{target}']['bet'] * users[f'{target}']['multiplier'])      #modify the number of cones
+    cones_given = num + (users[f'{target}']['bet'] * users[f'{target}']['multiplier']) - users[f'{target}']['bet']
     users[f'{target}']['bet'] = 0
     cones = users[f'{target}']['cones']
+    nickname = users[f'{target}']['nickname']
     percentile = scipy.stats.percentileofscore(df.cones, cones)
+    emoji = await cone_emojis(ctx, target=target)
     if percentile < low_bracket:
         users[f'{target}']['multiplier'] = highest
     elif percentile < medium_bracket:
@@ -394,7 +502,20 @@ async def add_cone(ctx, target, num=1):
         users[f'{target}']['multiplier'] = low
     with open('users.json', 'w') as f:      #write the changes to the json
         json.dump(users, f)
-    await ctx.send('{0} {1} has {2} cones to their name!'.format(random.choice(words), target, int(cones)))
+    gib_embed = discord.Embed(
+        title = 'The Cones Have Been Gib',
+        #description = '"Bring that one down!"',
+        color = discord.Color(0x00FF23)
+    )
+    #gib_embed.set_footer(text='This is a footer.')
+    #gib_embed.set_image(url='https://i.imgur.com/ePSB083.gif')
+    #gib_embed.set_thumbnail(url='https://i.imgur.com/W6uCASf.png')
+    gib_embed.set_author(name=nickname, icon_url=emoji)
+    gib_embed.add_field(name='Cones given:', value=int(cones_given), inline=True)
+    gib_embed.add_field(name='New number of cones:', value=int(cones), inline=True)
+    #gib_embed.add_field(name='Field Name', value='Field Value', inline=True)
+
+    await ctx.send(embed=gib_embed)
 
 @bot.command()
 @commands.has_role('Cone of Dunshire')
@@ -562,20 +683,20 @@ async def show_cones(ctx,target=None):
     else:
          await ctx.send('This user has no cones yet.')
 
-@bot.command(aliases=['leaderboard'])
-#shows the leaderboard
-async def show_leader(ctx):
-    with open('users.json', 'r') as f:
-        users = json.load(f)
-        df = pd.read_json('users.json') #creates a dataframe out of the json
-        df = df.T
-        df['names'] = df.index
-        df.cones = df.cones.astype(int)
-        df = df.set_index('cones')
-        df = df.drop(columns=['names', 'team', 'bet', 'multiplier', 'admin', 'bid'])
-    await ctx.send(df.sort_values(by=['cones'], ascending=False)) #sends the dataframe sorted by cones
+# @bot.command(aliases=['leaderboard'])
+# #shows the leaderboard
+# async def show_leader(ctx):
+#     with open('users.json', 'r') as f:
+#         users = json.load(f)
+#         df = pd.read_json('users.json') #creates a dataframe out of the json
+#         df = df.T
+#         df['names'] = df.index
+#         df.cones = df.cones.astype(int)
+#         df = df.set_index('cones')
+#         df = df.drop(columns=['names', 'team', 'bet', 'multiplier', 'admin', 'bid', 'points'])
+#     await ctx.send(df.sort_values(by=['cones'], ascending=False)) #sends the dataframe sorted by cones
 
-@bot.command(aliases=['top'])
+@bot.command(aliases=['top', 'leaderboard'])
 #shows the leaderboard
 async def show_top(ctx):
     with open('users.json', 'r') as f:
@@ -585,8 +706,25 @@ async def show_top(ctx):
         df['names'] = df.index
         df.cones = df.cones.astype(int)
         df = df.set_index('cones')
-        df = df.drop(columns=['names', 'team', 'bet', 'multiplier', 'admin', 'bid'])
-    await ctx.send(df.sort_values(by=['cones'], ascending=False).head()) #sends the dataframe sorted by cones
+        df = df.drop(columns=['nickname', 'team', 'bet', 'multiplier', 'admin', 'bid', 'points'])
+        df = df.sort_values(by=['cones'], ascending=False)
+        df.columns = ['']
+        df.index.rename('', inplace=True)
+        top_embed = discord.Embed(
+            title = 'Lord of The Cones',
+            description = '"Bring that one down!"',
+            color = discord.Color(0xFFD1DC)
+        )
+
+        #top_embed.set_footer(text='This is a footer.')
+        top_embed.set_image(url='https://i.imgur.com/ePSB083.gif')
+        top_embed.set_thumbnail(url='https://i.imgur.com/W6uCASf.png')
+        #top_embed.set_author(name='Author Name', icon_url='https://imgur.com/a/x2uYN8i')
+        top_embed.add_field(name='The Best', value=df.head(1), inline=True)
+        top_embed.add_field(name='The Rest', value=df[1:6], inline=True)
+        #top_embed.add_field(name='Field Name', value='Field Value', inline=True)
+
+        await ctx.send(embed=top_embed)
 
 @bot.command(aliases=['mults'])
 #shows the leaderboard
@@ -598,7 +736,7 @@ async def show_multiplier(ctx):
         df['names'] = df.index
         #df.cones = df.cones.astype(int)
         df = df.set_index('multiplier')
-        df = df.drop(columns=['names', 'team', 'bet', 'cones', 'admin', 'bid'])
+        df = df.drop(columns=['names', 'team', 'bet', 'cones', 'admin', 'bid', 'points'])
     await ctx.send(df.sort_values(by=['multiplier'])) #sends the dataframe sorted by cones
 
 @bot.command(aliases=['stats'])
@@ -612,11 +750,31 @@ async def show_stats(ctx):
         df.cones = df.cones.astype(int)
         df = df.drop(columns=['names', 'team'])
         target = '<@!{}>'.format(ctx.author.id)
+        nickname = users[f'{target}']['nickname']
         cones = int(users[f'{target}']['cones'])
+        multiplier = users[f'{target}']['multiplier']
+        emoji = await cone_emojis(ctx, target=target)
         difference_from_top = int(df.cones.max() - users[f'{target}']['cones'])
+        rank = users[f'{target}']['points']
         percentile = round(scipy.stats.percentileofscore(df.cones, cones), 2)
-    await ctx.send('You have {0} cones. \nYou are in the {1} percentile! omg. \nYou have a {2} multiplier. \nYou have {3} fewer cones than the current leader.'.format(cones, percentile, users[f'{target}']['multiplier'],difference_from_top))
+        stats_embed = discord.Embed(
+            title = 'Personal Cone Stats',
+            #description = '"Bring that one down!"',
+            color = discord.Color(0x0036FF)
+        )
 
+        #top_embed.set_footer(text='This is a footer.')
+        #stats_embed.set_image(url='https://i.imgur.com/ePSB083.gif')
+        stats_embed.set_thumbnail(url=emoji)
+        stats_embed.set_author(name=nickname, icon_url=emoji)
+        stats_embed.add_field(name='Number of cones:', value=cones, inline=True)
+        stats_embed.add_field(name='Percentile:', value=percentile, inline=True)
+        stats_embed.add_field(name='Distance from The Best:', value=difference_from_top, inline=True)
+        stats_embed.add_field(name='Betting multiplier:', value=multiplier, inline=True)
+        stats_embed.add_field(name='Weeks in the top 3:', value=rank, inline=True)
+        #top_embed.add_field(name='Field Name', value='Field Value', inline=True)
+
+        await ctx.send(embed=stats_embed)
 
 @bot.command(aliases=['commands'])
 #shows a list of available bot commands
@@ -671,7 +829,7 @@ async def rules(ctx, value='basic'):
     if value == 'basic':
         await ctx.send('Welcome to the rules. To access rules on specific topics for the channel you may type:\n".rules betting"\n".rules dictator"')
     elif value == 'betting':
-        await ctx.send('Greetings {}. Below you will find the rules for betting your cones away.\nYou may bet any number of cones up to the number that you own (type .stats to see) while playing in a game with other members of the channel. Type .bet [# of cones you want to bet]. Example: ".bet 5". Alternatively you can bet everything you have by typing ".bet max"; betting max will reward you with an extra multiplier to your winnings.\nThe currently accepted games to bet on are: Heroes Of The Storm.\nIf you do not want to play but wish to bet on someone else\'s game you may. However, you may only bet on them to win.'.format(ctx.author.mention))
+        await ctx.send('Greetings {}. Below you will find the rules for betting your cones away.\nYou may bet any number of cones up to the number that you own (type .stats to see) while playing in a game with other members of the channel. Type .bet [# of cones you want to bet]. Example: ".bet 5". Alternatively you can bet everything you have by typing ".bet max"; betting max will reward you with an extra multiplier to your winnings.\nThe currently accepted games to bet on are: Apex Legends, Heroes Of The Storm.\nIf you do not want to play but wish to bet on someone else\'s game you may. However, you may only bet on them to win.'.format(ctx.author.mention))
     elif value == 'dictator':
         await ctx.send('Hello future Dictator {}. Below you will find the path to domination.\nAn anonymous bidding war must take place. Whoever bids the highest amount will become Dictator.\nTo place a bid you must DM me (The Oracle of Cones) the following ".bid [insert number to bid here]". Example: ".bid 5". If you fail to do this in a DM with me then everyone will see your bid, making you easy to defeat and causing you to look extremely foolish.\nIf you place a bid and are defeated by someone else, your cones will be returned to you. If you bid the highest number of cones you forfeit those cones in the pursuit of Ultimate Power.\nIn the event of a tie, I (The Oracle of Cones) will randomly select a winner from among the highest bidders.\nAt any point someone may offer to buy the dictatorship from the current Dictator. If the current Dictator accepts the buyout then the title is transferred.\nUpon recieving the title of Dictator, you must select a General to serve at your side.\nAt any point either the Dictator or General can command anyone of a lower rank to drink. The General cannot tell The Dictator to drink, but either of them can impose those drinking whims upon all plebians.\nShould The General wish to have a coup to overthrow The Dictator, they may. The requirements for this are simple- with 75% of the popular vote, The General becomes the new Dictator. At this time the new Dictator must appoint a new General and the old Dictator becomes a plebian.\nIn case it wasn\'t clear: if you are not The Dictator or The General, you are a plebian. You are a commoner. You are unremarkable, insignificant, and smelly. As such, The Dictator and General, in their insurmountable wisdom and infinite power, can command you to drink at any time.'.format(ctx.author.mention))
     else:
