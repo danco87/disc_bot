@@ -12,7 +12,7 @@ import datetime
 
 pd.set_option('display.max_columns', None)
 
-TOKEN = ''
+TOKEN = 'NjkxMDQzMzg0MzgyNDU1ODA5.XrWryg.gXa7E4VwOEW-K1xabyaWhnx_pKw'
 bot = commands.Bot(command_prefix = '.')
 os.chdir(r'D:\Bot\github')
 
@@ -302,13 +302,34 @@ async def set_roles(ctx):
 async def bet_collect(ctx):
     with open('users.json', 'r') as f:
         users = json.load(f)            #read the json
+    new_high = []
+    new_line = '\n'
+    lost = []
     for user in users:
         if users[user]['cones'] < minimum_cones:
             users[user]['cones'] = minimum_cones
+        if users[user]['bet'] > users[user]['highest_loss']:
+            users[user]['highest_loss'] = users[user]['bet']
+            new_high.append(user)
+        if users[user]['bet'] > 0:
+            lost.append(user)
         users[user]['bet'] = 0
+    high_loss = new_line.join(new_high)
+    lost = new_line.join(lost)
     with open('users.json', 'w') as f:  #write the changes to the json
         json.dump(users, f)
-    await ctx.send('The Cone House has collected all the bets. Thanks for playing please come again.')
+    lost_embed = discord.Embed(
+        title = 'All remaining bets have been collected by the house.',
+        color = discord.Color(0xfcf803)
+    )
+    #bet_embed.set_author(name=nickname, icon_url=emoji)
+    if len(lost) > 0:
+        lost_embed.add_field(name='People who lost cones:', value=lost, inline=False)
+    if len(high_loss) > 0:
+        lost_embed.add_field(name='People with a new personal low:', value=high_loss, inline=False)
+    #bet_embed.add_field(name='Cones if you lose:', value=users['<@!{}>'.format(ctx.author.id)]['cones'], inline=False)
+    await ctx.send(embed=lost_embed)
+    #await ctx.send('The Cone House has collected all the bets. Thanks for playing please come again.')
     await set_odds(ctx)
 
 @bot.command()
@@ -477,7 +498,7 @@ async def show_bets(ctx):
         df = df.T
         df['names'] = df.index
         df = df.set_index('bet')
-        df = df.drop(columns=['names', 'cones', 'team', 'admin', 'bid'])
+        df = df.drop(columns=['names', 'cones', 'team', 'admin', 'bid', 'highest_win', 'highest_loss'])
     await ctx.send(df.drop(0).sort_values(by=['bet'])) #sends the dataframe sorted by bets
 
 @bot.command(aliases=['gib', 'Gib'])
@@ -501,8 +522,10 @@ async def add_cone(ctx, target, num=1):
     df['names'] = df.index
     df.cones = df.cones.astype(int)
     df = df.drop(columns=['names', 'team'])
-    users[f'{target}']['cones'] += num + (users[f'{target}']['bet'] * users[f'{target}']['multiplier'])      #modify the number of cones
     cones_given = num + (users[f'{target}']['bet'] * users[f'{target}']['multiplier']) - users[f'{target}']['bet']
+    if cones_given > users[f'{target}']['highest_win']:
+        users[f'{target}']['highest_win'] = cones_given
+    users[f'{target}']['cones'] += num + (users[f'{target}']['bet'] * users[f'{target}']['multiplier'])      #modify the number of cones
     users[f'{target}']['bet'] = 0
     cones = users[f'{target}']['cones']
     nickname = users[f'{target}']['nickname']
@@ -677,42 +700,52 @@ async def reset_teams(ctx):
     with open('users.json', 'w') as f:  #write the changes to the json
         json.dump(users, f)
 
-@bot.command()
-@commands.has_role('Cone of Dunshire')
-#sets all admin to 0
-async def admin(ctx):
-    with open('users.json', 'r') as f:
-        users = json.load(f)            #read the json
-    for user in users:
-        users[user]['admin'] = 0
-    await ctx.send('Set')
-    with open('users.json', 'w') as f:  #write the changes to the json
-        json.dump(users, f)
-
 @bot.command(aliases=['gib_team'])
 @commands.has_role('Cone of Dunshire')
 #adds a cone to the target team
-async def team_cone(ctx, *, temp):
+async def team_cone(ctx, *, team_name):
     with open('users.json', 'r') as f:
         users = json.load(f)            #read the json
-    temp = temp.lower()
+    team_name = team_name.lower()
+    names = []
+    cones_gibben = []
     for user in users:
         if users[user]['team'] != 0:
             users[user]['team'] = str(users[user]['team']).lower() #changes the team name to be a string and lower case
-            if users[user]['team'] == temp:
-                users[user]['cones'] += 1 + (users[user]['bet'] * users[user]['multiplier'])
+            if users[user]['team'] == team_name:
+                names.append(user)
+                cones_given = 1 + (users[user]['bet'] * users[user]['multiplier']) - users[user]['bet']
+                cones_gibben.append(str(round(cones_given)))
+                if cones_given > users[user]['highest_win']:
+                    users[user]['highest_win'] = cones_given
+                users[user]['cones'] += 1 + (users[user]['bet'] * users[user]['multiplier'])      #modify the number of cones
                 users[user]['bet'] = 0
         else:
             pass
+    new_line = "\n"
+    name_list = new_line.join(names)
+    cone_list = new_line.join(cones_gibben)
+    await set_odds(ctx)
+    #await ctx.send(name_list)
     with open('users.json', 'w') as f:  #write the changes to the json
         json.dump(users, f)
-    await ctx.send('Team {0} has won a cone. Every member of the team gains one (plus any bets)!'.format(temp))
+    team_embed = discord.Embed(
+        title = 'Winning Team!',
+        #description = '',
+        color = discord.Color(0xf542ef)
+    )
+    #gib_embed.set_image(url='https://i.imgur.com/ePSB083.gif')
+    #gib_embed.set_thumbnail(url='https://i.imgur.com/W6uCASf.png')
+    team_embed.add_field(name='Team Name:', value=team_name, inline=False)
+    team_embed.add_field(name='Player Names:', value=name_list, inline=True)
+    team_embed.add_field(name='Cones Won:', value=cone_list, inline=True)
+    await ctx.send(embed=team_embed)
 
 @bot.command()
 @commands.has_role('Cone of Dunshire')
 #awards a winning team and collects lost bets
 async def winner_winner(ctx, x):
-    await team_cone(ctx, temp=x)
+    await team_cone(ctx, team_name=x)
     await bet_collect(ctx)
 
 @bot.command(aliases=['show_cone'])
@@ -727,19 +760,6 @@ async def show_cones(ctx,target=None):
         await ctx.send('{0} has {1} cones, and a {2} multiplier.'.format(f'{target}', int(users[f'{target}']['cones']), users[f'{target}']['multiplier']))
     else:
          await ctx.send('This user has no cones yet.')
-
-# @bot.command(aliases=['leaderboard'])
-# #shows the leaderboard
-# async def show_leader(ctx):
-#     with open('users.json', 'r') as f:
-#         users = json.load(f)
-#         df = pd.read_json('users.json') #creates a dataframe out of the json
-#         df = df.T
-#         df['names'] = df.index
-#         df.cones = df.cones.astype(int)
-#         df = df.set_index('cones')
-#         df = df.drop(columns=['names', 'team', 'bet', 'multiplier', 'admin', 'bid', 'points'])
-#     await ctx.send(df.sort_values(by=['cones'], ascending=False)) #sends the dataframe sorted by cones
 
 @bot.command(aliases=['top', 'leaderboard'])
 #shows the leaderboard
@@ -802,6 +822,8 @@ async def show_stats(ctx):
         difference_from_top = int(df.cones.max() - users[f'{target}']['cones'])
         rank = users[f'{target}']['points']
         percentile = round(scipy.stats.percentileofscore(df.cones, cones), 2)
+        high_win = users[f'{target}']['highest_win']
+        high_loss = users[f'{target}']['highest_loss']
         stats_embed = discord.Embed(
             title = 'Personal Cone Stats',
             #description = '"Bring that one down!"',
@@ -813,12 +835,11 @@ async def show_stats(ctx):
         stats_embed.set_thumbnail(url=emoji)
         stats_embed.set_author(name=nickname, icon_url=emoji)
         stats_embed.add_field(name='Number of cones:', value=cones, inline=True)
-        stats_embed.add_field(name='Percentile:', value=percentile, inline=True)
         stats_embed.add_field(name='Distance from The Best:', value=difference_from_top, inline=True)
         stats_embed.add_field(name='Betting multiplier:', value=multiplier, inline=True)
         stats_embed.add_field(name='Weeks in the top 3:', value=rank, inline=True)
-        #top_embed.add_field(name='Field Name', value='Field Value', inline=True)
-
+        stats_embed.add_field(name='Largest bet won:', value=high_win, inline=True)
+        stats_embed.add_field(name='Largest bet lost:', value=high_loss, inline=True)
         await ctx.send(embed=stats_embed)
 
 @bot.command(aliases=['commands'])
