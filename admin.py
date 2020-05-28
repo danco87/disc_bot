@@ -1,3 +1,4 @@
+#!/usr/bin/python3
 import discord
 from discord.ext import commands
 from discord.ext.commands import has_permissions
@@ -12,9 +13,10 @@ import datetime
 
 pd.set_option('display.max_columns', None)
 
-TOKEN = 'NjkxMDQzMzg0MzgyNDU1ODA5.XrWryg.gXa7E4VwOEW-K1xabyaWhnx_pKw'
+TOKEN = ''
 bot = commands.Bot(command_prefix = '.')
-os.chdir(r'D:\Bot\github')
+#os.chdir(r'D:\Bot\github')
+
 
 #betting multipliers
 low = 1.25
@@ -771,7 +773,7 @@ async def show_top(ctx):
         df['names'] = df.index
         df.cones = df.cones.astype(int)
         df = df.set_index('cones')
-        df = df.drop(columns=['nickname', 'team', 'bet', 'multiplier', 'admin', 'bid', 'points'])
+        df = df.drop(columns=['nickname', 'team', 'bet', 'multiplier', 'admin', 'bid', 'points', 'highest_win', 'highest_loss'])
         df = df.sort_values(by=['cones'], ascending=False)
         df.columns = ['']
         df.index.rename('', inplace=True)
