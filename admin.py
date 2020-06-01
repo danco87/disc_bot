@@ -14,7 +14,7 @@ import datetime
 pd.set_option('display.max_columns', None)
 
 TOKEN = ''
-bot = commands.Bot(command_prefix = '.')
+bot = commands.Bot(command_prefix = '!')
 #os.chdir(r'D:\Bot\github')
 
 
@@ -399,80 +399,80 @@ async def bet(ctx, num):
                 if int(cones) == num: #check to see if the player is betting all of their cones
                     users[f'{target}']['multiplier'] = users[f'{target}']['multiplier'] * bet_max
                     potential_gain = int(1 + (users[f'{target}']['multiplier'] * users[f'{target}']['bet']) - users[f'{target}']['bet'])
-                    potential_cones = users[f'{target}']['bet'] + potential_gain
+                    potential_cones = users[f'{target}']['bet'] + potential_gain + users['<@!{}>'.format(ctx.author.id)]['cones']
                     bet_embed = discord.Embed(
                         title = 'All of your cones have been bet!',
                         color = discord.Color(0x001FFF)
                     )
                     bet_embed.set_author(name=nickname, icon_url=emoji)
                     bet_embed.add_field(name='Cones bet:', value=num, inline=False)
-                    bet_embed.add_field(name='Cones if you win:', value=potential_cones, inline=False)
-                    bet_embed.add_field(name='Cones if you lose:', value=users['<@!{}>'.format(ctx.author.id)]['cones'], inline=False)
+                    bet_embed.add_field(name='Cones you\'ll have if you win:', value=potential_cones, inline=False)
+                    bet_embed.add_field(name='Cones you\'ll have left if you lose:', value=users['<@!{}>'.format(ctx.author.id)]['cones'], inline=False)
                     await ctx.send(embed=bet_embed)
                 elif percentile < low_bracket:  #checks what percentile the player is in to adjust the multiplier
                     users[f'{target}']['multiplier'] = highest
                     potential_gain = int(1 + (users[f'{target}']['multiplier'] * users[f'{target}']['bet']) - users[f'{target}']['bet'])
-                    potential_cones = users[f'{target}']['bet'] + potential_gain
+                    potential_cones = users[f'{target}']['bet'] + potential_gain + users['<@!{}>'.format(ctx.author.id)]['cones']
                     bet_embed = discord.Embed(
                         title = 'The Cones Have Been Bet',
                         color = discord.Color(0x001FFF)
                     )
                     bet_embed.set_author(name=nickname, icon_url=emoji)
                     bet_embed.add_field(name='Cones bet:', value=num, inline=False)
-                    bet_embed.add_field(name='Cones if you win:', value=potential_cones, inline=False)
-                    bet_embed.add_field(name='Cones if you lose:', value=users['<@!{}>'.format(ctx.author.id)]['cones'], inline=False)
+                    bet_embed.add_field(name='Cones you\'ll have if you win:', value=potential_cones, inline=False)
+                    bet_embed.add_field(name='Cones you\'ll have left if you lose:', value=users['<@!{}>'.format(ctx.author.id)]['cones'], inline=False)
                     await ctx.send(embed=bet_embed)
                 elif percentile < medium_bracket:
                     users[f'{target}']['multiplier'] = higher
                     potential_gain = int(1 + (users[f'{target}']['multiplier'] * users[f'{target}']['bet']) - users[f'{target}']['bet'])
-                    potential_cones = users[f'{target}']['bet'] + potential_gain
+                    potential_cones = users[f'{target}']['bet'] + potential_gain + users['<@!{}>'.format(ctx.author.id)]['cones']
                     bet_embed = discord.Embed(
                         title = 'The Cones Have Been Bet',
                         color = discord.Color(0x001FFF)
                     )
                     bet_embed.set_author(name=nickname, icon_url=emoji)
                     bet_embed.add_field(name='Cones bet:', value=num, inline=False)
-                    bet_embed.add_field(name='Cones if you win:', value=potential_cones, inline=False)
-                    bet_embed.add_field(name='Cones if you lose:', value=users['<@!{}>'.format(ctx.author.id)]['cones'], inline=False)
+                    bet_embed.add_field(name='Cones you\'ll have if you win:', value=potential_cones, inline=False)
+                    bet_embed.add_field(name='Cones you\'ll have left if you lose:', value=users['<@!{}>'.format(ctx.author.id)]['cones'], inline=False)
                     await ctx.send(embed=bet_embed)
                 elif percentile < high_bracket:
                     users[f'{target}']['multiplier'] = high
                     potential_gain = int(1 + (users[f'{target}']['multiplier'] * users[f'{target}']['bet']) - users[f'{target}']['bet'])
-                    potential_cones = users[f'{target}']['bet'] + potential_gain
+                    potential_cones = users[f'{target}']['bet'] + potential_gain + users['<@!{}>'.format(ctx.author.id)]['cones']
                     bet_embed = discord.Embed(
                         title = 'The Cones Have Been Bet',
                         color = discord.Color(0x001FFF)
                     )
                     bet_embed.set_author(name=nickname, icon_url=emoji)
                     bet_embed.add_field(name='Cones bet:', value=num, inline=False)
-                    bet_embed.add_field(name='Cones if you win:', value=potential_cones, inline=False)
-                    bet_embed.add_field(name='Cones if you lose:', value=users['<@!{}>'.format(ctx.author.id)]['cones'], inline=False)
+                    bet_embed.add_field(name='Cones you\'ll have if you win:', value=potential_cones, inline=False)
+                    bet_embed.add_field(name='Cones you\'ll have left if you lose:', value=users['<@!{}>'.format(ctx.author.id)]['cones'], inline=False)
                     await ctx.send(embed=bet_embed)
                 elif percentile < higher_bracket:
                     users[f'{target}']['multiplier'] = medium
                     potential_gain = int(1 + (users[f'{target}']['multiplier'] * users[f'{target}']['bet']) - users[f'{target}']['bet'])
-                    potential_cones = users[f'{target}']['bet'] + potential_gain
+                    potential_cones = users[f'{target}']['bet'] + potential_gain + users['<@!{}>'.format(ctx.author.id)]['cones']
                     bet_embed = discord.Embed(
                         title = 'The Cones Have Been Bet',
                         color = discord.Color(0x001FFF)
                     )
                     bet_embed.set_author(name=nickname, icon_url=emoji)
                     bet_embed.add_field(name='Cones bet:', value=num, inline=False)
-                    bet_embed.add_field(name='Cones if you win:', value=potential_cones, inline=False)
-                    bet_embed.add_field(name='Cones if you lose:', value=users['<@!{}>'.format(ctx.author.id)]['cones'], inline=False)
+                    bet_embed.add_field(name='Cones you\'ll have if you win:', value=potential_cones, inline=False)
+                    bet_embed.add_field(name='Cones you\'ll have left if you lose:', value=users['<@!{}>'.format(ctx.author.id)]['cones'], inline=False)
                     await ctx.send(embed=bet_embed)
                 else:
                     users[f'{target}']['multiplier'] = low
                     potential_gain = int(1 + (users[f'{target}']['multiplier'] * users[f'{target}']['bet']) - users[f'{target}']['bet'])
-                    potential_cones = users[f'{target}']['bet'] + potential_gain
+                    potential_cones = users[f'{target}']['bet'] + potential_gain + users['<@!{}>'.format(ctx.author.id)]['cones']
                     bet_embed = discord.Embed(
                         title = 'The Cones Have Been Bet',
                         color = discord.Color(0x001FFF)
                     )
                     bet_embed.set_author(name=nickname, icon_url=emoji)
                     bet_embed.add_field(name='Cones bet:', value=num, inline=False)
-                    bet_embed.add_field(name='Cones if you win:', value=potential_cones, inline=False)
-                    bet_embed.add_field(name='Cones if you lose:', value=users['<@!{}>'.format(ctx.author.id)]['cones'], inline=False)
+                    bet_embed.add_field(name='Cones you\'ll have if you win:', value=potential_cones, inline=False)
+                    bet_embed.add_field(name='Cones you\'ll have left if you lose:', value=users['<@!{}>'.format(ctx.author.id)]['cones'], inline=False)
                     await ctx.send(embed=bet_embed)
             else:
                 bet_embed = discord.Embed(
@@ -624,7 +624,21 @@ async def remove_cone(ctx, target, num=1):
         target_cones = int(users[target]['cones'])
     with open('users.json', 'w') as f:  #write the changes to the json
         json.dump(users, f)
-    await ctx.send('{0} {1} only has {2} cones left to their name! ROFLMFAO'.format(random.choice(words) ,f'{target}',target_cones))
+    gib_embed = discord.Embed(
+        title = 'The Cones May Be Taketh Away',
+        description = '"hEy WhAt HaPpEnEd To My CoNeS"',
+        color = discord.Color(0x00FF23)
+    )
+    #gib_embed.set_footer(text='This is a footer.')
+    #gib_embed.set_image(url='https://i.imgur.com/ePSB083.gif')
+    #gib_embed.set_thumbnail(url='https://i.imgur.com/W6uCASf.png')
+    #gib_embed.set_author(name=nickname, icon_url=emoji)
+    gib_embed.add_field(name='Cones taketh:', value=num, inline=True)
+    gib_embed.add_field(name='New number of cones:', value=target_cones, inline=True)
+    #gib_embed.add_field(name='Field Name', value='Field Value', inline=True)
+
+    await ctx.send(embed=gib_embed)
+    #await ctx.send('{0} {1} only has {2} cones left to their name! ROFLMFAO'.format(random.choice(words) ,f'{target}',target_cones))
 
 @bot.command(aliases=['give_cones'])
 #give cones
@@ -838,10 +852,10 @@ async def show_stats(ctx):
         stats_embed.set_author(name=nickname, icon_url=emoji)
         stats_embed.add_field(name='Number of cones:', value=cones, inline=True)
         stats_embed.add_field(name='Distance from The Best:', value=difference_from_top, inline=True)
-        stats_embed.add_field(name='Betting multiplier:', value=multiplier, inline=True)
+        #stats_embed.add_field(name='Betting multiplier:', value=multiplier, inline=True)
         stats_embed.add_field(name='Weeks in the top 3:', value=rank, inline=True)
-        stats_embed.add_field(name='Largest bet won:', value=high_win, inline=True)
-        stats_embed.add_field(name='Largest bet lost:', value=high_loss, inline=True)
+        stats_embed.add_field(name='Largest bet won:', value=high_win, inline=False)
+        stats_embed.add_field(name='Largest bet lost:', value=high_loss, inline=False)
         await ctx.send(embed=stats_embed)
 
 @bot.command(aliases=['commands'])
