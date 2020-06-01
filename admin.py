@@ -14,7 +14,7 @@ import datetime
 pd.set_option('display.max_columns', None)
 
 TOKEN = ''
-bot = commands.Bot(command_prefix = '!')
+bot = commands.Bot(command_prefix = '.')
 #os.chdir(r'D:\Bot\github')
 
 
