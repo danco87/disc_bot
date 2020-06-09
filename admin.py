@@ -13,9 +13,9 @@ import datetime
 
 pd.set_option('display.max_columns', None)
 
-TOKEN = ''
-bot = commands.Bot(command_prefix = '.')
-#os.chdir(r'D:\Bot\github')
+TOKEN = 'NjkwNzkyNjc3ODA1MTI5NzQ4.XtMglA.LGnY-ZtjfQFLQPEUtvs0prpC9uk'
+bot = commands.Bot(command_prefix = '!')
+os.chdir(r'D:\Bot\github')
 
 
 #betting multipliers
