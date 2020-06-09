@@ -13,9 +13,9 @@ import datetime
 
 pd.set_option('display.max_columns', None)
 
-TOKEN = 'NjkwNzkyNjc3ODA1MTI5NzQ4.XtMglA.LGnY-ZtjfQFLQPEUtvs0prpC9uk'
+TOKEN = ''
 bot = commands.Bot(command_prefix = '!')
-os.chdir(r'D:\Bot\github')
+#os.chdir(r'D:\Bot\github')
 
 
 #betting multipliers
@@ -29,6 +29,7 @@ highest = 6
 bronze_cone = 'https://i.imgur.com/yHO3bsl.png'
 silver_cone = 'https://i.imgur.com/ePD2lkm.png'
 gold_cone = 'https://i.imgur.com/P5xtXBb.png'
+platinum_cone = 'https://i.imgur.com/LuYDuUg.png'
 
 #minimum number of cones someone can have
 minimum_cones = 4
@@ -106,8 +107,7 @@ async def cone_emojis(ctx, target):
         #obsidian
         pass
     elif users[target]['points'] >= 4:
-        #diamond
-        pass
+        return platinum_cone
     elif users[target]['points'] >= 2:
         return gold_cone
     elif users[target]['points'] >= 1:
