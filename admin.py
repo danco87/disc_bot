@@ -65,6 +65,8 @@ async def on_member_join(member):
         users[f'{target}']['admin'] = 0
         users[f'{target}']['bid'] = 0
         users[f'{target}']['points'] = 0
+        users[f'{target}']['highest_win'] = 0
+        users[f'{target}']['highest_loss'] = 0
         role = discord.utils.get(member.guild.roles, name = "Agility Cone")
         await member.add_roles(role)
     with open('users.json', 'w') as f:  #write the changes to the json
@@ -519,6 +521,8 @@ async def add_cone(ctx, target, num=1):
         users[f'{target}']['nickname'] = f'{target}'
         users[f'{target}']['admin'] = 0
         users[f'{target}']['points'] = 0
+        users[f'{target}']['highest_win'] = 0
+        users[f'{target}']['highest_loss'] = 0
     df = pd.read_json('users.json') #creates a dataframe out of the json
     df = df.T
     df['names'] = df.index
