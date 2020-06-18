@@ -92,7 +92,7 @@ async def new_user(ctx, target):
         users = json.load(f)            #read the json
     if not f'{target}' in users:        #create a entry for the user if one doesn't already exist
         users[f'{target}'] = {}
-        users[f'{target}']['cones'] = minimum_cones - 1
+        users[f'{target}']['cones'] = minimum_cones
         users[f'{target}']['multiplier'] = high
         users[f'{target}']['bet'] = 0
         users[f'{target}']['bid'] = 0
