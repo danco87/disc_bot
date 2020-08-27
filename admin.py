@@ -13,9 +13,9 @@ import datetime
 
 pd.set_option('display.max_columns', None)
 
-TOKEN = ''
-bot = commands.Bot(command_prefix = '.')
-#os.chdir(r'D:\Bot\github')
+TOKEN = 'NjkwNzkyNjc3ODA1MTI5NzQ4.XnWk0A.iLIMDZcFVZMPxoR0RIpf3mtOdPM'
+bot = commands.Bot(command_prefix = '!')
+os.chdir(r'D:\Bot\github')
 
 
 #betting multipliers
@@ -30,6 +30,7 @@ bronze_cone = 'https://i.imgur.com/yHO3bsl.png'
 silver_cone = 'https://i.imgur.com/ePD2lkm.png'
 gold_cone = 'https://i.imgur.com/P5xtXBb.png'
 platinum_cone = 'https://i.imgur.com/LuYDuUg.png'
+diamond_cone = 'https://imgur.com/cVpri8F.jpg'
 
 #minimum number of cones someone can have
 minimum_cones = 4
@@ -114,8 +115,7 @@ async def cone_emojis(ctx, target):
         #admin_cone
         return bronze_cone
     if users[target]['points'] >= 6:
-        #obsidian
-        pass
+        return diamond_cone
     elif users[target]['points'] >= 4:
         return platinum_cone
     elif users[target]['points'] >= 2:
@@ -995,6 +995,24 @@ async def compliment(ctx, *, target):
                     "you're someone's reason to smile.",
                     "how do you keep being so funny and making everyone laugh?",]
     await ctx.send(f'{target}, {random.choice(compliments)}')
+
+@bot.command()
+#rolls any sided dice
+async def roll(ctx, number):
+    with open('users.json', 'r') as f:
+        users = json.load(f)
+    target = '<@!{}>'.format(ctx.author.id)
+    nickname = users[f'{target}']['nickname']
+    real_number = int(float(number))
+    temp = range(1,real_number+1)
+    result = random.choice(temp)
+    gib_embed = discord.Embed(
+        title = 'Your roll!',
+        color = discord.Color(0x00FF23)
+    )
+    gib_embed.set_author(name=nickname)
+    gib_embed.add_field(name='From 1 to {}:'.format(real_number), value=result, inline=True)
+    await ctx.send(embed=gib_embed)
 
 @bot.command(aliases=['8ball'])
 #gives an 8ball prediction of a question
